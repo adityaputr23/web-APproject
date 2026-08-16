@@ -75,6 +75,10 @@ if (empty($dbConn) || $dbConn === 'sqlite') {
     $_SERVER['DB_DATABASE'] = $writableSqlite;
 }
 
+putenv("APP_SERVICES_CACHE=/tmp/bootstrap/cache/services.php");
+putenv("APP_PACKAGES_CACHE=/tmp/bootstrap/cache/packages.php");
+putenv("APP_CONFIG_CACHE=/tmp/bootstrap/cache/config.php");
+putenv("APP_ROUTES_CACHE=/tmp/bootstrap/cache/routes.php");
 putenv("VIEW_COMPILED_PATH={$tmpStorage}/framework/views");
 
 try {
@@ -83,12 +87,28 @@ try {
 
     $app->useStoragePath($tmpStorage);
 
+    // Ensure view compiled path and session storage use /tmp
+    if ($app->bound('config')) {
+        $config = $app->make('config');
+        $config->set('view.compiled', $tmpStorage . '/framework/views');
+        $config->set('session.files', $tmpStorage . '/framework/sessions');
+    }
+
     $app->handleRequest(Request::capture());
 } catch (\Throwable $e) {
     http_response_code(500);
     echo "<h1>Laravel Application Error (Vercel)</h1>";
-    echo "<p><strong>Error Message:</strong> " . htmlspecialchars($e->getMessage()) . "</p>";
-    echo "<p><strong>File:</strong> " . htmlspecialchars($e->getFile()) . " (Line " . $e->getLine() . ")</p>";
-    echo "<hr><h3>Stack Trace:</h3>";
-    echo "<pre style='background:#f4f4f4;padding:15px;border-radius:8px;overflow-x:auto;'>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
+
+    $current = $e;
+    $count = 1;
+    while ($current) {
+        echo "<div style='background:#fff;border:1px solid #e1e4e8;padding:16px;margin-bottom:16px;border-radius:8px;font-family:sans-serif;'>";
+        echo "<h3 style='color:#d73a49;margin-top:0;'>Exception #{$count}: " . htmlspecialchars(get_class($current)) . "</h3>";
+        echo "<p><strong>Message:</strong> " . htmlspecialchars($current->getMessage()) . "</p>";
+        echo "<p><strong>File:</strong> " . htmlspecialchars($current->getFile()) . " (Line " . $current->getLine() . ")</p>";
+        echo "<pre style='background:#f6f8fa;padding:12px;border-radius:6px;overflow-x:auto;font-size:12px;'>" . htmlspecialchars($current->getTraceAsString()) . "</pre>";
+        echo "</div>";
+        $current = $current->getPrevious();
+        $count++;
+    }
 }
