@@ -5,6 +5,31 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
+// Serve static assets directly if routed to api/index.php
+$uri = urldecode(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH));
+$publicFile = __DIR__ . '/../public' . $uri;
+
+if ($uri !== '/' && file_exists($publicFile) && !is_dir($publicFile)) {
+    $extension = strtolower(pathinfo($publicFile, PATHINFO_EXTENSION));
+    $mimes = [
+        'css'  => 'text/css',
+        'js'   => 'application/javascript',
+        'json' => 'application/json',
+        'png'  => 'image/png',
+        'jpg'  => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'webp' => 'image/webp',
+        'svg'  => 'image/svg+xml',
+        'ico'  => 'image/x-icon',
+        'woff' => 'font/woff',
+        'woff2'=> 'font/woff2',
+    ];
+    $mime = $mimes[$extension] ?? (function_exists('mime_content_type') ? mime_content_type($publicFile) : 'application/octet-stream');
+    header("Content-Type: {$mime}");
+    readfile($publicFile);
+    exit;
+}
+
 // Prepare writable storage & database directories in Vercel serverless environment (/tmp)
 $tmpStorage = '/tmp/storage';
 $tmpDatabase = '/tmp/database';
