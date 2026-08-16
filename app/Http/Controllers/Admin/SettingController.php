@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 
 class SettingController extends Controller
 {
+    public function __construct(protected CloudinaryService $cloudinary) {}
+
     /**
      * Show the settings edit form.
      */
@@ -69,37 +71,34 @@ class SettingController extends Controller
 
         // Handle Profile Image Upload
         if ($request->hasFile('profile_image')) {
-            $file = $request->file('profile_image');
-            $filename = 'profile.jpg';
-            
-            // Delete old profile image if exists
-            $oldPath = public_path('images/' . $filename);
-            if (File::exists($oldPath)) {
-                File::delete($oldPath);
-            }
-            
-            $file->move(public_path('images'), $filename);
-            
-            // Save settings key
-            Setting::updateOrCreate(['key' => 'profile_image'], ['value' => $filename]);
-        }
-
-        // Handle About Photo Upload
-        if ($request->hasFile('about_photo')) {
-            $file = $request->file('about_photo');
-            $ext = $file->getClientOriginalExtension();
-            $filename = 'about_photo.' . $ext;
-
-            // Delete old about photo if exists (any extension)
-            foreach (['jpg','jpeg','png','webp'] as $oldExt) {
-                $oldPath = public_path('images/about_photo.' . $oldExt);
+            // Delete old local profile image if it's not a Cloudinary URL
+            $oldSetting = Setting::where('key', 'profile_image')->first();
+            if ($oldSetting && !str_starts_with($oldSetting->value, 'http')) {
+                $oldPath = public_path('images/' . $oldSetting->value);
                 if (File::exists($oldPath)) {
                     File::delete($oldPath);
                 }
             }
 
-            $file->move(public_path('images'), $filename);
-            Setting::updateOrCreate(['key' => 'about_photo'], ['value' => $filename]);
+            $url = $this->cloudinary->upload($request->file('profile_image'));
+            Setting::updateOrCreate(['key' => 'profile_image'], ['value' => $url]);
+        }
+
+        // Handle About Photo Upload
+        if ($request->hasFile('about_photo')) {
+            // Delete old local about photo if not Cloudinary
+            $oldSetting = Setting::where('key', 'about_photo')->first();
+            if ($oldSetting && !str_starts_with($oldSetting->value, 'http')) {
+                foreach (['jpg', 'jpeg', 'png', 'webp'] as $oldExt) {
+                    $oldPath = public_path('images/about_photo.' . $oldExt);
+                    if (File::exists($oldPath)) {
+                        File::delete($oldPath);
+                    }
+                }
+            }
+
+            $url = $this->cloudinary->upload($request->file('about_photo'));
+            Setting::updateOrCreate(['key' => 'about_photo'], ['value' => $url]);
         }
 
         // Save other settings keys

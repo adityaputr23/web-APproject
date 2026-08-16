@@ -44,7 +44,7 @@
                         <div class="form-group">
                             <label class="form-label">Current Profile Photo (Hero)</label>
                             <div class="current-profile-photo-preview">
-                                <img src="{{ asset('images/' . ($settings['profile_image'] ?? 'profile.jpg')) }}" alt="Profile photo" class="settings-profile-img">
+                                <img src="{{ asset_url($settings['profile_image'] ?? 'profile.jpg') }}" alt="Profile photo" class="settings-profile-img">
                             </div>
                         </div>
 
@@ -87,7 +87,7 @@
                             <label class="form-label">Current About Photo</label>
                             <div class="current-profile-photo-preview">
                                 @if(!empty($settings['about_photo']))
-                                    <img src="{{ asset('images/' . $settings['about_photo']) }}" alt="About photo" class="settings-profile-img">
+                                    <img src="{{ asset_url($settings['about_photo']) }}" alt="About photo" class="settings-profile-img">
                                 @else
                                     <div class="settings-profile-img" style="display:flex;align-items:center;justify-content:center;background:rgba(22,34,102,0.2);border-radius:12px;color:#a0b4cc;font-size:32px;">
                                         <i class="ri-user-4-line"></i>

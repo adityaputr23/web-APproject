@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Skill;
+use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 
 class SkillController extends Controller
 {
+    public function __construct(protected CloudinaryService $cloudinary) {}
+
     /**
      * Display a listing of the skills.
      */
@@ -44,10 +47,7 @@ class SkillController extends Controller
 
         // Handle logo upload
         if ($request->hasFile('logo')) {
-            $file     = $request->file('logo');
-            $filename = 'skill_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('images/skills'), $filename);
-            $validated['logo_path'] = 'skills/' . $filename;
+            $validated['logo_path'] = $this->cloudinary->upload($request->file('logo'), 'skills');
         }
 
         unset($validated['logo']);
@@ -81,15 +81,15 @@ class SkillController extends Controller
 
         // Handle logo upload
         if ($request->hasFile('logo')) {
-            // Hapus logo lama jika ada
-            if ($skill->logo_path && File::exists(public_path('images/' . $skill->logo_path))) {
-                File::delete(public_path('images/' . $skill->logo_path));
+            // Delete old local logo only if it is a local file (not Cloudinary URL)
+            if ($skill->logo_path && !str_starts_with($skill->logo_path, 'http')) {
+                $localPath = public_path('images/' . $skill->logo_path);
+                if (File::exists($localPath)) {
+                    File::delete($localPath);
+                }
             }
 
-            $file     = $request->file('logo');
-            $filename = 'skill_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $file->move(public_path('images/skills'), $filename);
-            $validated['logo_path'] = 'skills/' . $filename;
+            $validated['logo_path'] = $this->cloudinary->upload($request->file('logo'), 'skills');
         }
 
         unset($validated['logo']);
@@ -104,9 +104,12 @@ class SkillController extends Controller
      */
     public function destroy(Skill $skill)
     {
-        // Hapus logo jika ada
-        if ($skill->logo_path && File::exists(public_path('images/' . $skill->logo_path))) {
-            File::delete(public_path('images/' . $skill->logo_path));
+        // Delete local logo only
+        if ($skill->logo_path && !str_starts_with($skill->logo_path, 'http')) {
+            $localPath = public_path('images/' . $skill->logo_path);
+            if (File::exists($localPath)) {
+                File::delete($localPath);
+            }
         }
 
         $skill->delete();

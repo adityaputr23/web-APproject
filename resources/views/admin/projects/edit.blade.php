@@ -75,9 +75,9 @@
                 <label class="form-label">Current Media File</label>
                 <div class="current-asset-preview" style="padding:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;display:flex;align-items:center;gap:16px;">
                     @if($project->type === 'video' || Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov']))
-                        <video src="{{ asset('images/' . $project->asset_path) }}" autoplay loop muted playsinline style="width:120px;height:70px;object-fit:cover;border-radius:8px;background:#000;"></video>
+                        <video src="{{ asset_url($project->asset_path) }}" autoplay loop muted playsinline style="width:120px;height:70px;object-fit:cover;border-radius:8px;background:#000;"></video>
                     @else
-                        <img src="{{ asset('images/' . $project->asset_path) }}" alt="{{ $project->title }}" style="width:120px;height:70px;object-fit:cover;border-radius:8px;">
+                        <img src="{{ asset_url($project->asset_path) }}" alt="{{ $project->title }}" style="width:120px;height:70px;object-fit:cover;border-radius:8px;">
                     @endif
                     <div>
                         <p style="font-size:13px;font-weight:600;color:#e2e2e2;margin:0;">{{ $project->asset_path }}</p>

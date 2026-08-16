@@ -38,7 +38,7 @@
             
             <div class="hero-image-wrapper">
                 <div class="hero-image-card">
-                    <img src="{{ asset('images/' . ($settings['profile_image'] ?? 'profile.jpg')) }}" alt="Creative Director" class="hero-img">
+                    <img src="{{ asset_url($settings['profile_image'] ?? 'profile.jpg') }}" alt="Creative Director" class="hero-img">
                     <div class="glass-overlay"></div>
                 </div>
             </div>
@@ -54,7 +54,7 @@
                 <div class="about-photo-col">
                     <div class="about-photo-card">
                         @if(!empty($settings['about_photo']))
-                            <img src="{{ asset('images/' . $settings['about_photo']) }}" alt="{{ $settings['about_name'] ?? 'About Photo' }}" class="about-photo">
+                            <img src="{{ asset_url($settings['about_photo']) }}" alt="{{ $settings['about_name'] ?? 'About Photo' }}" class="about-photo">
                         @else
                             <div class="about-photo-placeholder">
                                 <i class="ri-user-4-line"></i>
@@ -142,7 +142,7 @@
                                 <div class="creative-card">
                                     @if($skill->logo_path)
                                         <div class="card-logo-wrap">
-                                            <img src="{{ asset('images/' . $skill->logo_path) }}" alt="{{ $skill->name }} logo" class="card-logo-img">
+                                            <img src="{{ asset_url($skill->logo_path) }}" alt="{{ $skill->name }} logo" class="card-logo-img">
                                         </div>
                                     @else
                                         <span class="card-number">0{{ $loop->iteration }}</span>
@@ -212,10 +212,10 @@
                                 data-category="{{ $project->category }}"
                                 data-tags="{{ $project->tags }}"
                                 data-type="{{ $project->type }}"
-                                data-asset="{{ asset('images/' . $project->asset_path) }}"
+                                data-asset="{{ asset_url($project->asset_path) }}"
                                 data-url="{{ $project->project_url }}">
                                 <div class="showcase-media-wrapper">
-                                    <img src="{{ asset('images/' . $project->asset_path) }}" alt="{{ $project->title }}" class="showcase-img">
+                                    <img src="{{ asset_url($project->asset_path) }}" alt="{{ $project->title }}" class="showcase-img">
                                     <div class="showcase-overlay">
                                         <div class="showcase-content">
                                             <span class="showcase-category">{{ $project->category }}</span>
@@ -254,10 +254,10 @@
                                 data-category="{{ $project->category }}"
                                 data-tags="{{ $project->tags }}"
                                 data-type="video"
-                                data-asset="{{ asset('images/' . $project->asset_path) }}"
+                                data-asset="{{ asset_url($project->asset_path) }}"
                                 data-url="{{ $project->project_url }}">
                                 <div class="showcase-media-wrapper">
-                                    <video src="{{ asset('images/' . $project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
+                                    <video src="{{ asset_url($project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
                                     <div class="showcase-overlay">
                                         <div class="showcase-content">
                                             <span class="showcase-category">{{ $project->category }}</span>
@@ -317,13 +317,13 @@
                                 data-category="{{ $project->category }}"
                                 data-tags="{{ $project->tags }}"
                                 data-type="{{ $project->type }}"
-                                data-asset="{{ asset('images/' . $project->asset_path) }}"
+                                data-asset="{{ asset_url($project->asset_path) }}"
                                 data-url="{{ $project->project_url }}">
                                 <div class="showcase-media-wrapper">
                                     @if($project->type === 'video' || Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov']))
-                                        <video src="{{ asset('images/' . $project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
+                                        <video src="{{ asset_url($project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
                                     @else
-                                        <img src="{{ asset('images/' . $project->asset_path) }}" alt="{{ $project->title }}" class="showcase-img">
+                                        <img src="{{ asset_url($project->asset_path) }}" alt="{{ $project->title }}" class="showcase-img">
                                     @endif
                                     <div class="showcase-overlay">
                                         <div class="showcase-content">
@@ -368,13 +368,13 @@
                                 data-category="{{ $project->category }}"
                                 data-tags="{{ $project->tags }}"
                                 data-type="{{ $project->type }}"
-                                data-asset="{{ asset('images/' . $project->asset_path) }}"
+                                data-asset="{{ asset_url($project->asset_path) }}"
                                 data-url="{{ $project->project_url }}">
                                 <div class="showcase-media-wrapper">
                                     @if($project->type === 'video' || Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov']))
-                                        <video src="{{ asset('images/' . $project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
+                                        <video src="{{ asset_url($project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
                                     @else
-                                        <img src="{{ asset('images/' . $project->asset_path) }}" alt="{{ $project->title }}" class="showcase-img">
+                                        <img src="{{ asset_url($project->asset_path) }}" alt="{{ $project->title }}" class="showcase-img">
                                     @endif
                                     <div class="showcase-overlay">
                                         <div class="showcase-content">

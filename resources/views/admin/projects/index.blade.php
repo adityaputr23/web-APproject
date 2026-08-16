@@ -38,7 +38,7 @@
                                 <span class="badge-order">{{ $project->order }}</span>
                             </td>
                             <td class="col-preview">
-                                <img src="{{ asset('images/' . $project->asset_path) }}" alt="{{ $project->title }}" class="table-preview-img">
+                                <img src="{{ asset_url($project->asset_path) }}" alt="{{ $project->title }}" class="table-preview-img">
                             </td>
                             <td>
                                 <span class="table-highlight">{{ $project->title }}</span>
