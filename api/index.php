@@ -5,6 +5,9 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
+// Register Composer autoloader first
+require __DIR__ . '/../vendor/autoload.php';
+
 // Serve static assets directly if routed to api/index.php
 $uri = urldecode(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH));
 $publicFile = __DIR__ . '/../public' . $uri;
@@ -12,17 +15,17 @@ $publicFile = __DIR__ . '/../public' . $uri;
 if ($uri !== '/' && file_exists($publicFile) && !is_dir($publicFile)) {
     $extension = strtolower(pathinfo($publicFile, PATHINFO_EXTENSION));
     $mimes = [
-        'css'  => 'text/css',
-        'js'   => 'application/javascript',
-        'json' => 'application/json',
-        'png'  => 'image/png',
-        'jpg'  => 'image/jpeg',
-        'jpeg' => 'image/jpeg',
-        'webp' => 'image/webp',
-        'svg'  => 'image/svg+xml',
-        'ico'  => 'image/x-icon',
-        'woff' => 'font/woff',
-        'woff2'=> 'font/woff2',
+        'css'   => 'text/css',
+        'js'    => 'application/javascript',
+        'json'  => 'application/json',
+        'png'   => 'image/png',
+        'jpg'   => 'image/jpeg',
+        'jpeg'  => 'image/jpeg',
+        'webp'  => 'image/webp',
+        'svg'   => 'image/svg+xml',
+        'ico'   => 'image/x-icon',
+        'woff'  => 'font/woff',
+        'woff2' => 'font/woff2',
     ];
     $mime = $mimes[$extension] ?? (function_exists('mime_content_type') ? mime_content_type($publicFile) : 'application/octet-stream');
     header("Content-Type: {$mime}");
@@ -61,8 +64,8 @@ if (!file_exists($writableSqlite)) {
     }
 }
 
-// If DB_CONNECTION is sqlite or unset, point DB_DATABASE to writable /tmp SQLite
-$dbConn = env('DB_CONNECTION');
+// Check DB_CONNECTION using native PHP getenv / $_ENV
+$dbConn = getenv('DB_CONNECTION') ?: ($_ENV['DB_CONNECTION'] ?? $_SERVER['DB_CONNECTION'] ?? null);
 if (empty($dbConn) || $dbConn === 'sqlite') {
     putenv("DB_CONNECTION=sqlite");
     putenv("DB_DATABASE={$writableSqlite}");
@@ -75,9 +78,6 @@ if (empty($dbConn) || $dbConn === 'sqlite') {
 putenv("VIEW_COMPILED_PATH={$tmpStorage}/framework/views");
 
 try {
-    // Register Composer autoloader
-    require __DIR__ . '/../vendor/autoload.php';
-
     /** @var Application $app */
     $app = require_once __DIR__ . '/../bootstrap/app.php';
 
