@@ -32,23 +32,36 @@ class PortfolioController extends Controller
         }
 
         // Fetch settings
-        $settingsRaw = Setting::all();
         $settings = [];
-        foreach ($settingsRaw as $s) {
-            $settings[$s->key] = $s->value;
+        try {
+            $settingsRaw = Setting::all();
+            foreach ($settingsRaw as $s) {
+                $settings[$s->key] = $s->value;
+            }
+        } catch (\Throwable $e) {
+            // Fallback to empty settings if DB is initializing
         }
 
         // Fetch skills grouped by category
-        $creativeSkills = Skill::where('category', 'creative')
-            ->orderBy('order', 'asc')
-            ->get();
+        try {
+            $creativeSkills = Skill::where('category', 'creative')
+                ->orderBy('order', 'asc')
+                ->get();
 
-        $engineeringSkills = Skill::where('category', 'engineering')
-            ->orderBy('order', 'asc')
-            ->get();
+            $engineeringSkills = Skill::where('category', 'engineering')
+                ->orderBy('order', 'asc')
+                ->get();
+        } catch (\Throwable $e) {
+            $creativeSkills = collect();
+            $engineeringSkills = collect();
+        }
 
         // Fetch projects
-        $projects = Project::orderBy('order', 'asc')->get();
+        try {
+            $projects = Project::orderBy('order', 'asc')->get();
+        } catch (\Throwable $e) {
+            $projects = collect();
+        }
 
         return view('portfolio.index', compact('settings', 'creativeSkills', 'engineeringSkills', 'projects'));
     }

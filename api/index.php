@@ -111,9 +111,10 @@ try {
 
     $app->useStoragePath($tmpStorage);
 
-    // Ensure view compiled path, session driver, and session storage use /tmp
+    // Ensure app.debug, view compiled path, session driver, and session storage use /tmp
     if ($app->bound('config')) {
         $config = $app->make('config');
+        $config->set('app.debug', true);
         $config->set('view.compiled', $tmpStorage . '/framework/views');
         $config->set('session.files', $tmpStorage . '/framework/sessions');
         $config->set('session.driver', 'cookie');
