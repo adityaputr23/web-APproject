@@ -5,6 +5,15 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
+// Set Vercel environment flags
+putenv("VERCEL=1");
+$_ENV['VERCEL'] = '1';
+$_SERVER['VERCEL'] = '1';
+
+putenv("LOG_CHANNEL=stderr");
+$_ENV['LOG_CHANNEL'] = 'stderr';
+$_SERVER['LOG_CHANNEL'] = 'stderr';
+
 // Register Composer autoloader first
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -112,6 +121,7 @@ try {
     if ($app->bound('config')) {
         $config = $app->make('config');
         $config->set('app.debug', true);
+        $config->set('logging.default', 'stderr');
         $config->set('view.compiled', $tmpStorage . '/framework/views');
         $config->set('session.files', $tmpStorage . '/framework/sessions');
         $config->set('session.driver', 'cookie');
