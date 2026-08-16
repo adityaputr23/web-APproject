@@ -21,10 +21,14 @@ class PortfolioController extends Controller
     {
         // Log page view if visitor is not logged in as admin (to keep metrics clean)
         if (!Auth::check()) {
-            PageView::create([
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-            ]);
+            try {
+                PageView::create([
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+            } catch (\Throwable $e) {
+                // Ignore metrics error if database is initializing
+            }
         }
 
         // Fetch settings

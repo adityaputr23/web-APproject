@@ -64,6 +64,15 @@ if (!file_exists($writableSqlite)) {
     }
 }
 
+// Ensure APP_KEY has a valid fallback key if missing in Vercel env
+$appKey = getenv('APP_KEY') ?: ($_ENV['APP_KEY'] ?? $_SERVER['APP_KEY'] ?? null);
+if (empty($appKey)) {
+    $fallbackKey = 'base64:nVFhQRk5Qcd5C42t47/VAJaLcvCnUeOIgyr/+gBKUZY=';
+    putenv("APP_KEY={$fallbackKey}");
+    $_ENV['APP_KEY'] = $fallbackKey;
+    $_SERVER['APP_KEY'] = $fallbackKey;
+}
+
 // Check DB_CONNECTION using native PHP getenv / $_ENV
 $dbConn = getenv('DB_CONNECTION') ?: ($_ENV['DB_CONNECTION'] ?? $_SERVER['DB_CONNECTION'] ?? null);
 if (empty($dbConn) || $dbConn === 'sqlite') {
@@ -75,19 +84,19 @@ if (empty($dbConn) || $dbConn === 'sqlite') {
     $_SERVER['DB_DATABASE'] = $writableSqlite;
 }
 
-// Ensure SESSION_DRIVER and CACHE_STORE are not empty strings
+// Use 'cookie' or 'file' for SESSION_DRIVER to prevent database session table dependency errors
 $sessionDriver = getenv('SESSION_DRIVER') ?: ($_ENV['SESSION_DRIVER'] ?? $_SERVER['SESSION_DRIVER'] ?? null);
-if (empty($sessionDriver)) {
-    putenv("SESSION_DRIVER=database");
-    $_ENV['SESSION_DRIVER'] = 'database';
-    $_SERVER['SESSION_DRIVER'] = 'database';
+if (empty($sessionDriver) || $sessionDriver === 'database') {
+    putenv("SESSION_DRIVER=cookie");
+    $_ENV['SESSION_DRIVER'] = 'cookie';
+    $_SERVER['SESSION_DRIVER'] = 'cookie';
 }
 
 $cacheStore = getenv('CACHE_STORE') ?: ($_ENV['CACHE_STORE'] ?? $_SERVER['CACHE_STORE'] ?? null);
-if (empty($cacheStore)) {
-    putenv("CACHE_STORE=database");
-    $_ENV['CACHE_STORE'] = 'database';
-    $_SERVER['CACHE_STORE'] = 'database';
+if (empty($cacheStore) || $cacheStore === 'database') {
+    putenv("CACHE_STORE=file");
+    $_ENV['CACHE_STORE'] = 'file';
+    $_SERVER['CACHE_STORE'] = 'file';
 }
 
 putenv("APP_SERVICES_CACHE=/tmp/bootstrap/cache/services.php");
@@ -102,11 +111,13 @@ try {
 
     $app->useStoragePath($tmpStorage);
 
-    // Ensure view compiled path and session storage use /tmp
+    // Ensure view compiled path, session driver, and session storage use /tmp
     if ($app->bound('config')) {
         $config = $app->make('config');
         $config->set('view.compiled', $tmpStorage . '/framework/views');
         $config->set('session.files', $tmpStorage . '/framework/sessions');
+        $config->set('session.driver', 'cookie');
+        $config->set('cache.default', 'file');
     }
 
     $app->handleRequest(Request::capture());
