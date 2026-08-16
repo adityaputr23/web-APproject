@@ -1,0 +1,7 @@
+/vendor
+/node_modules
+.env
+*.log
+.phpunit.result.cache
+check_methods.php
+test_cloudinary.php
