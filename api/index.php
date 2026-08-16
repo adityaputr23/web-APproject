@@ -73,30 +73,27 @@ if (empty($appKey)) {
     $_SERVER['APP_KEY'] = $fallbackKey;
 }
 
-// Check DB_CONNECTION using native PHP getenv / $_ENV
+// FORCE session driver to cookie on Vercel to avoid database session table dependencies
+putenv("SESSION_DRIVER=cookie");
+$_ENV['SESSION_DRIVER'] = 'cookie';
+$_SERVER['SESSION_DRIVER'] = 'cookie';
+
+// FORCE cache store to file on Vercel to avoid database cache dependencies
+putenv("CACHE_STORE=file");
+$_ENV['CACHE_STORE'] = 'file';
+$_SERVER['CACHE_STORE'] = 'file';
+
+// If DB_HOST is localhost/127.0.0.1 or DB_CONNECTION is sqlite/empty, switch DB to writable SQLite
 $dbConn = getenv('DB_CONNECTION') ?: ($_ENV['DB_CONNECTION'] ?? $_SERVER['DB_CONNECTION'] ?? null);
-if (empty($dbConn) || $dbConn === 'sqlite') {
+$dbHost = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? $_SERVER['DB_HOST'] ?? '127.0.0.1');
+
+if (empty($dbConn) || $dbConn === 'sqlite' || $dbHost === '127.0.0.1' || $dbHost === 'localhost') {
     putenv("DB_CONNECTION=sqlite");
     putenv("DB_DATABASE={$writableSqlite}");
     $_ENV['DB_CONNECTION'] = 'sqlite';
     $_ENV['DB_DATABASE'] = $writableSqlite;
     $_SERVER['DB_CONNECTION'] = 'sqlite';
     $_SERVER['DB_DATABASE'] = $writableSqlite;
-}
-
-// Use 'cookie' or 'file' for SESSION_DRIVER to prevent database session table dependency errors
-$sessionDriver = getenv('SESSION_DRIVER') ?: ($_ENV['SESSION_DRIVER'] ?? $_SERVER['SESSION_DRIVER'] ?? null);
-if (empty($sessionDriver) || $sessionDriver === 'database') {
-    putenv("SESSION_DRIVER=cookie");
-    $_ENV['SESSION_DRIVER'] = 'cookie';
-    $_SERVER['SESSION_DRIVER'] = 'cookie';
-}
-
-$cacheStore = getenv('CACHE_STORE') ?: ($_ENV['CACHE_STORE'] ?? $_SERVER['CACHE_STORE'] ?? null);
-if (empty($cacheStore) || $cacheStore === 'database') {
-    putenv("CACHE_STORE=file");
-    $_ENV['CACHE_STORE'] = 'file';
-    $_SERVER['CACHE_STORE'] = 'file';
 }
 
 putenv("APP_SERVICES_CACHE=/tmp/bootstrap/cache/services.php");
