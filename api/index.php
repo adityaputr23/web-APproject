@@ -75,6 +75,21 @@ if (empty($dbConn) || $dbConn === 'sqlite') {
     $_SERVER['DB_DATABASE'] = $writableSqlite;
 }
 
+// Ensure SESSION_DRIVER and CACHE_STORE are not empty strings
+$sessionDriver = getenv('SESSION_DRIVER') ?: ($_ENV['SESSION_DRIVER'] ?? $_SERVER['SESSION_DRIVER'] ?? null);
+if (empty($sessionDriver)) {
+    putenv("SESSION_DRIVER=database");
+    $_ENV['SESSION_DRIVER'] = 'database';
+    $_SERVER['SESSION_DRIVER'] = 'database';
+}
+
+$cacheStore = getenv('CACHE_STORE') ?: ($_ENV['CACHE_STORE'] ?? $_SERVER['CACHE_STORE'] ?? null);
+if (empty($cacheStore)) {
+    putenv("CACHE_STORE=database");
+    $_ENV['CACHE_STORE'] = 'database';
+    $_SERVER['CACHE_STORE'] = 'database';
+}
+
 putenv("APP_SERVICES_CACHE=/tmp/bootstrap/cache/services.php");
 putenv("APP_PACKAGES_CACHE=/tmp/bootstrap/cache/packages.php");
 putenv("APP_CONFIG_CACHE=/tmp/bootstrap/cache/config.php");
