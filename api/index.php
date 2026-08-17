@@ -18,6 +18,13 @@ putenv("APP_DEBUG=true");
 $_ENV['APP_DEBUG'] = 'true';
 $_SERVER['APP_DEBUG'] = 'true';
 
+// Force HTTPS environment flags for Vercel SSL termination
+putenv("HTTPS=on");
+$_ENV['HTTPS'] = 'on';
+$_SERVER['HTTPS'] = 'on';
+$_SERVER['SERVER_PORT'] = '443';
+$_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
+
 // Remove stale local bootstrap cache files if deployed to Vercel
 @unlink(__DIR__ . '/../bootstrap/cache/services.php');
 @unlink(__DIR__ . '/../bootstrap/cache/packages.php');
