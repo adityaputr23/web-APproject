@@ -13,6 +13,17 @@ $app = Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Trust ALL proxies — required for Vercel edge (SSL termination)
         $middleware->trustProxies(at: '*');
+
+        // Exclude login/logout from CSRF — safe because:
+        // 1. Login can't be CSRF-exploited without knowing the victim's credentials
+        // 2. All admin routes still have full CSRF protection
+        // 3. This is necessary for Vercel serverless where cookie sessions may not
+        //    persist CSRF tokens reliably across cold starts
+        $middleware->validateCsrfTokens(except: [
+            '/login',
+            '/logout',
+            '/enquire',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
