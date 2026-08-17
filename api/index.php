@@ -161,6 +161,7 @@ try {
         // ---- FILE SESSION in /tmp/storage/framework/sessions ----
         $config->set('session.driver',     'file');
         $config->set('session.files',      $tmpStorage . '/framework/sessions');
+        $config->set('session.cookie',     'apv_sess_v2');
         $config->set('session.lifetime',   120);
         $config->set('session.secure',     true);   // HTTPS-only (Vercel is always HTTPS)
         $config->set('session.same_site',  'lax');  // Allow normal navigation
