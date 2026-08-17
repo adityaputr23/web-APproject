@@ -11,23 +11,16 @@ $app = Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust ALL proxies — required for Vercel edge (SSL termination)
         $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
 
-if (isset($_ENV['VERCEL']) || isset($_SERVER['VERCEL']) || getenv('VERCEL')) {
+// Vercel: redirect writable storage to /tmp
+if (getenv('VERCEL') || isset($_SERVER['VERCEL'])) {
     $app->useStoragePath('/tmp/storage');
-
-    if ($app->bound('config')) {
-        $config = $app->make('config');
-        $config->set('session.driver', 'database');
-        $config->set('cache.default', 'file');
-        $config->set('filesystems.default', 'local');
-        $config->set('app.maintenance.driver', 'file');
-        $config->set('logging.default', 'stderr');
-    }
 }
 
 return $app;
