@@ -31,8 +31,12 @@ class LoginController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
-            return redirect()->intended(route('admin.dashboard'));
+            try {
+                $request->session()->regenerate();
+            } catch (\Throwable $e) {
+                // Ignore session ID regeneration exception on cookie session driver in serverless context
+            }
+            return redirect()->route('admin.dashboard');
         }
 
         throw ValidationException::withMessages([
