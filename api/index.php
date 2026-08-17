@@ -100,10 +100,10 @@ if (empty($appKey)) {
     $_SERVER['APP_KEY'] = $fallbackKey;
 }
 
-// FORCE session driver to cookie on Vercel to avoid database session table dependencies
-putenv("SESSION_DRIVER=cookie");
-$_ENV['SESSION_DRIVER'] = 'cookie';
-$_SERVER['SESSION_DRIVER'] = 'cookie';
+// FORCE session driver to database on Vercel for reliable session persistence in SQLite
+putenv("SESSION_DRIVER=database");
+$_ENV['SESSION_DRIVER'] = 'database';
+$_SERVER['SESSION_DRIVER'] = 'database';
 
 // FORCE cache store to file on Vercel to avoid database cache dependencies
 putenv("CACHE_STORE=file");

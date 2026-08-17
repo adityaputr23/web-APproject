@@ -22,7 +22,7 @@ if (isset($_ENV['VERCEL']) || isset($_SERVER['VERCEL']) || getenv('VERCEL')) {
 
     if ($app->bound('config')) {
         $config = $app->make('config');
-        $config->set('session.driver', 'cookie');
+        $config->set('session.driver', 'database');
         $config->set('cache.default', 'file');
         $config->set('filesystems.default', 'local');
         $config->set('app.maintenance.driver', 'file');
