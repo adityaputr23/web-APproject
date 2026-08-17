@@ -5,38 +5,56 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
-// Set Vercel environment flags
+// --- Vercel Environment Flags ---
 putenv("VERCEL=1");
 $_ENV['VERCEL'] = '1';
 $_SERVER['VERCEL'] = '1';
 
 putenv("LOG_CHANNEL=stderr");
-$_ENV['LOG_CHANNEL'] = 'stderr';
+$_ENV['LOG_CHANNEL']  = 'stderr';
 $_SERVER['LOG_CHANNEL'] = 'stderr';
 
-putenv("APP_DEBUG=true");
-$_ENV['APP_DEBUG'] = 'true';
-$_SERVER['APP_DEBUG'] = 'true';
-
-// Force HTTPS environment flags for Vercel SSL termination
+// Force HTTPS (Vercel terminates SSL at the edge)
 putenv("HTTPS=on");
-$_ENV['HTTPS'] = 'on';
+$_ENV['HTTPS']  = 'on';
 $_SERVER['HTTPS'] = 'on';
 $_SERVER['SERVER_PORT'] = '443';
 $_SERVER['HTTP_X_FORWARDED_PROTO'] = 'https';
 
-// Remove stale local bootstrap cache files if deployed to Vercel
+// Detect actual hostname for APP_URL (support custom domains too)
+$host = $_SERVER['HTTP_HOST'] ?? 'apvisuals.vercel.app';
+putenv("APP_URL=https://{$host}");
+$_ENV['APP_URL']    = "https://{$host}";
+$_SERVER['APP_URL'] = "https://{$host}";
+
+// Set production env on Vercel
+putenv("APP_ENV=production");
+$_ENV['APP_ENV']    = 'production';
+$_SERVER['APP_ENV'] = 'production';
+
+// Force cookie session — the only stateless-safe driver for Vercel serverless
+// (file sessions don't persist, database requires SQLite copy which is unreliable)
+putenv("SESSION_DRIVER=cookie");
+$_ENV['SESSION_DRIVER']  = 'cookie';
+$_SERVER['SESSION_DRIVER'] = 'cookie';
+
+// Use file cache in /tmp (no DB needed for cache)
+putenv("CACHE_STORE=file");
+$_ENV['CACHE_STORE']  = 'file';
+$_SERVER['CACHE_STORE'] = 'file';
+
+// Remove stale bootstrap cache (leftover from local dev)
 @unlink(__DIR__ . '/../bootstrap/cache/services.php');
 @unlink(__DIR__ . '/../bootstrap/cache/packages.php');
 @unlink(__DIR__ . '/../bootstrap/cache/config.php');
 @unlink(__DIR__ . '/../bootstrap/cache/routes.php');
 @unlink(__DIR__ . '/../bootstrap/cache/routes-v7.php');
 
-// Register Composer autoloader first
+// Register Composer autoloader
 require __DIR__ . '/../vendor/autoload.php';
 
-// Serve static assets directly if routed to api/index.php
-$uri = urldecode(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH));
+// --- Serve static public assets directly ---
+$uri        = urldecode(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH));
 $publicFile = __DIR__ . '/../public' . $uri;
 
 if ($uri !== '/' && file_exists($publicFile) && !is_dir($publicFile)) {
@@ -53,6 +71,7 @@ if ($uri !== '/' && file_exists($publicFile) && !is_dir($publicFile)) {
         'ico'   => 'image/x-icon',
         'woff'  => 'font/woff',
         'woff2' => 'font/woff2',
+        'mp4'   => 'video/mp4',
     ];
     $mime = $mimes[$extension] ?? (function_exists('mime_content_type') ? mime_content_type($publicFile) : 'application/octet-stream');
     header("Content-Type: {$mime}");
@@ -60,9 +79,8 @@ if ($uri !== '/' && file_exists($publicFile) && !is_dir($publicFile)) {
     exit;
 }
 
-// Prepare writable storage & database directories in Vercel serverless environment (/tmp)
+// --- Prepare /tmp writable directories for Vercel ---
 $tmpStorage = '/tmp/storage';
-$tmpDatabase = '/tmp/database';
 $dirs = [
     $tmpStorage . '/app/public',
     $tmpStorage . '/framework/views',
@@ -70,7 +88,6 @@ $dirs = [
     $tmpStorage . '/framework/sessions',
     $tmpStorage . '/logs',
     '/tmp/bootstrap/cache',
-    $tmpDatabase,
 ];
 
 foreach ($dirs as $dir) {
@@ -79,86 +96,93 @@ foreach ($dirs as $dir) {
     }
 }
 
-// Handle SQLite database in /tmp for Vercel
-$localSqlite = __DIR__ . '/../database/database.sqlite';
-$writableSqlite = $tmpDatabase . '/database.sqlite';
+// --- Determine Database ---
+// If no external DB_HOST is set (i.e. still localhost), switch to SQLite in /tmp
+$dbConn = getenv('DB_CONNECTION') ?: ($_ENV['DB_CONNECTION'] ?? 'mysql');
+$dbHost = getenv('DB_HOST')       ?: ($_ENV['DB_HOST'] ?? '127.0.0.1');
 
-if (file_exists($localSqlite)) {
-    if (!file_exists($writableSqlite) || filesize($writableSqlite) === 0 || filesize($writableSqlite) !== filesize($localSqlite)) {
-        @copy($localSqlite, $writableSqlite);
+if ($dbConn !== 'mysql' || $dbHost === '127.0.0.1' || $dbHost === 'localhost') {
+    $tmpDatabase    = '/tmp/database';
+    $writableSqlite = $tmpDatabase . '/database.sqlite';
+
+    @mkdir($tmpDatabase, 0755, true);
+
+    $localSqlite = __DIR__ . '/../database/database.sqlite';
+    if (file_exists($localSqlite)) {
+        if (!file_exists($writableSqlite) || filesize($writableSqlite) !== filesize($localSqlite)) {
+            @copy($localSqlite, $writableSqlite);
+        }
+    } elseif (!file_exists($writableSqlite)) {
+        @touch($writableSqlite);
     }
-} else if (!file_exists($writableSqlite)) {
-    @touch($writableSqlite);
+
+    putenv("DB_CONNECTION=sqlite");
+    putenv("DB_DATABASE={$writableSqlite}");
+    $_ENV['DB_CONNECTION']  = 'sqlite';
+    $_ENV['DB_DATABASE']    = $writableSqlite;
+    $_SERVER['DB_CONNECTION'] = 'sqlite';
+    $_SERVER['DB_DATABASE']   = $writableSqlite;
 }
 
-// Ensure APP_KEY has a valid fallback key if missing in Vercel env
-$appKey = getenv('APP_KEY') ?: ($_ENV['APP_KEY'] ?? $_SERVER['APP_KEY'] ?? null);
+// --- APP_KEY fallback (should be set in Vercel env vars) ---
+$appKey = getenv('APP_KEY') ?: ($_ENV['APP_KEY'] ?? null);
 if (empty($appKey)) {
     $fallbackKey = 'base64:nVFhQRk5Qcd5C42t47/VAJaLcvCnUeOIgyr/+gBKUZY=';
     putenv("APP_KEY={$fallbackKey}");
-    $_ENV['APP_KEY'] = $fallbackKey;
+    $_ENV['APP_KEY']  = $fallbackKey;
     $_SERVER['APP_KEY'] = $fallbackKey;
 }
 
-// FORCE session driver to database on Vercel for reliable session persistence in SQLite
-putenv("SESSION_DRIVER=database");
-$_ENV['SESSION_DRIVER'] = 'database';
-$_SERVER['SESSION_DRIVER'] = 'database';
-
-// FORCE cache store to file on Vercel to avoid database cache dependencies
-putenv("CACHE_STORE=file");
-$_ENV['CACHE_STORE'] = 'file';
-$_SERVER['CACHE_STORE'] = 'file';
-
-// If DB_HOST is localhost/127.0.0.1 or DB_CONNECTION is sqlite/empty, switch DB to writable SQLite
-$dbConn = getenv('DB_CONNECTION') ?: ($_ENV['DB_CONNECTION'] ?? $_SERVER['DB_CONNECTION'] ?? null);
-$dbHost = getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? $_SERVER['DB_HOST'] ?? '127.0.0.1');
-
-if (empty($dbConn) || $dbConn === 'sqlite' || $dbHost === '127.0.0.1' || $dbHost === 'localhost') {
-    putenv("DB_CONNECTION=sqlite");
-    putenv("DB_DATABASE={$writableSqlite}");
-    $_ENV['DB_CONNECTION'] = 'sqlite';
-    $_ENV['DB_DATABASE'] = $writableSqlite;
-    $_SERVER['DB_CONNECTION'] = 'sqlite';
-    $_SERVER['DB_DATABASE'] = $writableSqlite;
-}
-
+// --- Path overrides for Vercel ---
 putenv("APP_SERVICES_CACHE=/tmp/bootstrap/cache/services.php");
 putenv("APP_PACKAGES_CACHE=/tmp/bootstrap/cache/packages.php");
 putenv("APP_CONFIG_CACHE=/tmp/bootstrap/cache/config.php");
 putenv("APP_ROUTES_CACHE=/tmp/bootstrap/cache/routes.php");
 putenv("VIEW_COMPILED_PATH={$tmpStorage}/framework/views");
 
+// --- Boot Laravel ---
 try {
     /** @var Application $app */
     $app = require_once __DIR__ . '/../bootstrap/app.php';
 
     $app->useStoragePath($tmpStorage);
 
-    // Ensure app.debug, view compiled path, session driver, and session storage use /tmp
+    // Apply config overrides after container is available
     if ($app->bound('config')) {
         $config = $app->make('config');
-        $config->set('app.debug', true);
-        $config->set('logging.default', 'stderr');
-        $config->set('view.compiled', $tmpStorage . '/framework/views');
-        $config->set('session.files', $tmpStorage . '/framework/sessions');
-        $config->set('session.driver', 'cookie');
-        $config->set('cache.default', 'file');
+
+        $config->set('app.debug',          true);
+        $config->set('app.env',            'production');
+        $config->set('app.url',            "https://{$host}");
+        $config->set('logging.default',    'stderr');
+        $config->set('view.compiled',      $tmpStorage . '/framework/views');
+        $config->set('cache.default',      'file');
+        $config->set('cache.stores.file.path', $tmpStorage . '/framework/cache/data');
+
+        // ---- COOKIE SESSION — no server-side storage needed ----
+        $config->set('session.driver',     'cookie');
+        $config->set('session.lifetime',   120);
+        $config->set('session.encrypt',    true);   // Encrypt session data inside cookie
+        $config->set('session.secure',     true);   // HTTPS-only (Vercel is always HTTPS)
+        $config->set('session.same_site',  'lax');  // Allow normal navigation
+        $config->set('session.domain',     null);   // Let browser handle domain
+        $config->set('session.http_only',  true);
     }
 
     $app->handleRequest(Request::capture());
+
 } catch (\Throwable $e) {
     http_response_code(500);
-    echo "<h1>Laravel Application Error (Vercel)</h1>";
+    echo "<h1 style='font-family:sans-serif;color:#d73a49'>Laravel Application Error</h1>";
 
     $current = $e;
-    $count = 1;
+    $count   = 1;
     while ($current) {
-        echo "<div style='background:#fff;border:1px solid #e1e4e8;padding:16px;margin-bottom:16px;border-radius:8px;font-family:sans-serif;'>";
-        echo "<h3 style='color:#d73a49;margin-top:0;'>Exception #{$count}: " . htmlspecialchars(get_class($current)) . "</h3>";
-        echo "<p><strong>Message:</strong> " . htmlspecialchars($current->getMessage()) . "</p>";
-        echo "<p><strong>File:</strong> " . htmlspecialchars($current->getFile()) . " (Line " . $current->getLine() . ")</p>";
-        echo "<pre style='background:#f6f8fa;padding:12px;border-radius:6px;overflow-x:auto;font-size:12px;'>" . htmlspecialchars($current->getTraceAsString()) . "</pre>";
+        echo "<div style='background:#fff8f8;border:1px solid #f0c0c0;padding:16px;margin-bottom:16px;border-radius:8px;font-family:monospace;font-size:13px'>";
+        echo "<strong style='color:#d73a49'>Exception #{$count}: " . htmlspecialchars(get_class($current)) . "</strong><br>";
+        echo "<em>" . htmlspecialchars($current->getMessage()) . "</em><br><br>";
+        echo htmlspecialchars($current->getFile()) . " (line " . $current->getLine() . ")<br>";
+        echo "<pre style='background:#f6f8fa;padding:10px;border-radius:4px;overflow:auto;font-size:11px'>" . htmlspecialchars($current->getTraceAsString()) . "</pre>";
         echo "</div>";
         $current = $current->getPrevious();
         $count++;
