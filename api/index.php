@@ -157,6 +157,8 @@ try {
         $config->set('view.compiled',      $tmpStorage . '/framework/views');
         $config->set('cache.default',      'file');
         $config->set('cache.stores.file.path', $tmpStorage . '/framework/cache/data');
+        $config->set('hashing.driver',     'bcrypt');
+        $config->set('hashing.bcrypt.rounds', 10);
 
         // ---- FILE SESSION in /tmp/storage/framework/sessions ----
         $config->set('session.driver',     'file');

@@ -26,16 +26,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
-            if ($request->is('login') || $request->is('admin*')) {
-                return response()->json([
-                    'error_type' => get_class($e),
-                    'error_message' => $e->getMessage(),
-                    'file' => $e->getFile() . ':' . $e->getLine(),
-                    'trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 12),
-                ], 500);
-            }
-        });
+        //
     })->create();
 
 // Vercel: redirect writable storage to /tmp
