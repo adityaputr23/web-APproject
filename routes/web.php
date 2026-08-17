@@ -43,6 +43,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 Route::get('/debug-session', function () {
     $dbUsersCount = 0;
     $adminExists  = false;
+    $localSqlite  = base_path('database/database.sqlite');
     try {
         $dbUsersCount = \App\Models\User::count();
         $adminExists  = \App\Models\User::where('email', 'admin@apvisuals.com')->exists();
@@ -51,20 +52,22 @@ Route::get('/debug-session', function () {
     }
 
     return response()->json([
-        'session_driver'   => config('session.driver'),
-        'session_id'       => session()->getId(),
-        'session_has_token'=> session()->has('_token'),
-        'csrf_token'       => csrf_token(),
-        'auth_check'       => auth()->check(),
-        'auth_user'        => auth()->user()?->email,
-        'db_connection'    => config('database.default'),
-        'db_file'          => config('database.connections.sqlite.database'),
-        'db_users_count'   => $dbUsersCount,
-        'admin_user_exists'=> $adminExists,
-        'app_env'          => app()->environment(),
-        'app_key_set'      => !empty(config('app.key')),
-        'vercel_env'       => getenv('VERCEL') ?: 'not set',
-        'https'            => request()->isSecure(),
+        'session_driver'     => config('session.driver'),
+        'session_id'         => session()->getId(),
+        'session_has_token'  => session()->has('_token'),
+        'csrf_token'         => csrf_token(),
+        'auth_check'         => auth()->check(),
+        'auth_user'          => auth()->user()?->email,
+        'db_connection'      => config('database.default'),
+        'db_file'            => config('database.connections.sqlite.database'),
+        'db_users_count'     => $dbUsersCount,
+        'admin_user_exists'  => $adminExists,
+        'local_sqlite_exists'=> file_exists($localSqlite),
+        'local_sqlite_size'  => file_exists($localSqlite) ? filesize($localSqlite) : 0,
+        'app_env'            => app()->environment(),
+        'app_key_set'        => !empty(config('app.key')),
+        'vercel_env'         => getenv('VERCEL') ?: 'not set',
+        'https'              => request()->isSecure(),
     ]);
 });
 

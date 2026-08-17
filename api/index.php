@@ -109,7 +109,7 @@ if ($dbConn !== 'mysql' || $dbHost === '127.0.0.1' || $dbHost === 'localhost') {
 
     $localSqlite = __DIR__ . '/../database/database.sqlite';
     if (file_exists($localSqlite)) {
-        if (!file_exists($writableSqlite) || filesize($writableSqlite) < filesize($localSqlite)) {
+        if (!file_exists($writableSqlite) || filesize($writableSqlite) !== filesize($localSqlite)) {
             @copy($localSqlite, $writableSqlite);
         }
     } elseif (!file_exists($writableSqlite)) {
