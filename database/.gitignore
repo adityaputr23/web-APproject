@@ -1,1 +1,3 @@
-*.sqlite*
+# SQLite files are intentionally tracked for Vercel deployment.
+# api/index.php copies database.sqlite to /tmp/database/database.sqlite at runtime.
+# Do NOT add *.sqlite back here.

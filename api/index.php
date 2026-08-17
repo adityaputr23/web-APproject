@@ -32,10 +32,11 @@ putenv("APP_ENV=production");
 $_ENV['APP_ENV']    = 'production';
 $_SERVER['APP_ENV'] = 'production';
 
-// Use file session in /tmp/storage/framework/sessions (prevents huge cookie headers & 494 error)
-putenv("SESSION_DRIVER=file");
-$_ENV['SESSION_DRIVER']  = 'file';
-$_SERVER['SESSION_DRIVER'] = 'file';
+// Use cookie session (stateless — works across ALL Vercel lambda instances).
+// File sessions break on Vercel because /tmp is NOT shared between instances.
+putenv("SESSION_DRIVER=cookie");
+$_ENV['SESSION_DRIVER']  = 'cookie';
+$_SERVER['SESSION_DRIVER'] = 'cookie';
 
 // Force BCRYPT_ROUNDS to integer 10 (prevents password_hash invalid cost error)
 putenv("BCRYPT_ROUNDS=10");
@@ -165,15 +166,16 @@ try {
         $config->set('hashing.driver',     'bcrypt');
         $config->set('hashing.bcrypt.rounds', 10);
 
-        // ---- FILE SESSION in /tmp/storage/framework/sessions ----
-        $config->set('session.driver',     'file');
-        $config->set('session.files',      $tmpStorage . '/framework/sessions');
-        $config->set('session.cookie',     'apv_sess_v2');
-        $config->set('session.lifetime',   120);
-        $config->set('session.secure',     true);   // HTTPS-only (Vercel is always HTTPS)
-        $config->set('session.same_site',  'lax');  // Allow normal navigation
-        $config->set('session.domain',     null);   // Let browser handle domain
-        $config->set('session.http_only',  true);
+        // ---- COOKIE SESSION — stateless, works across all Vercel lambda instances ----
+        // File sessions fail because each lambda has its own isolated /tmp.
+        $config->set('session.driver',    'cookie');
+        $config->set('session.cookie',    'apv_sess_v2');
+        $config->set('session.lifetime',  120);
+        $config->set('session.secure',    true);   // HTTPS-only (Vercel is always HTTPS)
+        $config->set('session.same_site', 'lax');  // Allow normal cross-page navigation
+        $config->set('session.domain',    null);   // Let browser use current domain
+        $config->set('session.http_only', true);
+        $config->set('session.encrypt',   true);   // Encrypt session payload
     }
 
     $app->handleRequest(Request::capture());
