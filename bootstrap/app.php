@@ -19,6 +19,15 @@ $app = Application::configure(basePath: dirname(__DIR__))
 
 if (isset($_ENV['VERCEL']) || isset($_SERVER['VERCEL']) || getenv('VERCEL')) {
     $app->useStoragePath('/tmp/storage');
+
+    if ($app->bound('config')) {
+        $config = $app->make('config');
+        $config->set('session.driver', 'cookie');
+        $config->set('cache.default', 'file');
+        $config->set('filesystems.default', 'local');
+        $config->set('app.maintenance.driver', 'file');
+        $config->set('logging.default', 'stderr');
+    }
 }
 
 return $app;
