@@ -201,7 +201,7 @@
                             $catLower = strtolower($project->category ?? '');
                             $titleLower = strtolower($project->title ?? '');
                             $isWebOrApp = str_contains($catLower, 'web') || str_contains($catLower, 'site') || str_contains($catLower, 'store') || str_contains($catLower, 'app') || str_contains($catLower, 'mobile') || str_contains($catLower, 'saas') || str_contains($catLower, 'system') || str_contains($titleLower, 'web') || str_contains($titleLower, 'store') || str_contains($titleLower, 'app');
-                            $isVideo = $project->type === 'video' || Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov', '.mkv', '.avi']);
+                            $isVideo = $project->type === 'video' || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov', '.mkv', '.avi']);
                         @endphp
                         @if($photoCount < 6 && !$isVideo && !$isWebOrApp)
                             @php $photoCount++; @endphp
@@ -245,7 +245,7 @@
                 <div class="showcase-grid">
                     @php $videoCount = 0; @endphp
                     @foreach($projects as $project)
-                        @if($videoCount < 6 && ($project->type === 'video' || Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov', '.mkv', '.avi'])))
+                        @if($videoCount < 6 && ($project->type === 'video' || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov', '.mkv', '.avi'])))
                             @php $videoCount++; @endphp
                             <div class="showcase-item"
                                 data-id="{{ $project->id }}"
@@ -320,7 +320,7 @@
                                 data-asset="{{ asset_url($project->asset_path) }}"
                                 data-url="{{ $project->project_url }}">
                                 <div class="showcase-media-wrapper">
-                                    @if($project->type === 'video' || Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov']))
+                                    @if($project->type === 'video' || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov']))
                                         <video src="{{ asset_url($project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
                                     @else
                                         <img src="{{ asset_url($project->asset_path) }}" alt="{{ $project->title }}" class="showcase-img">
@@ -371,7 +371,7 @@
                                 data-asset="{{ asset_url($project->asset_path) }}"
                                 data-url="{{ $project->project_url }}">
                                 <div class="showcase-media-wrapper">
-                                    @if($project->type === 'video' || Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov']))
+                                    @if($project->type === 'video' || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov']))
                                         <video src="{{ asset_url($project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
                                     @else
                                         <img src="{{ asset_url($project->asset_path) }}" alt="{{ $project->title }}" class="showcase-img">

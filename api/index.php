@@ -14,6 +14,17 @@ putenv("LOG_CHANNEL=stderr");
 $_ENV['LOG_CHANNEL'] = 'stderr';
 $_SERVER['LOG_CHANNEL'] = 'stderr';
 
+putenv("APP_DEBUG=true");
+$_ENV['APP_DEBUG'] = 'true';
+$_SERVER['APP_DEBUG'] = 'true';
+
+// Remove stale local bootstrap cache files if deployed to Vercel
+@unlink(__DIR__ . '/../bootstrap/cache/services.php');
+@unlink(__DIR__ . '/../bootstrap/cache/packages.php');
+@unlink(__DIR__ . '/../bootstrap/cache/config.php');
+@unlink(__DIR__ . '/../bootstrap/cache/routes.php');
+@unlink(__DIR__ . '/../bootstrap/cache/routes-v7.php');
+
 // Register Composer autoloader first
 require __DIR__ . '/../vendor/autoload.php';
 
