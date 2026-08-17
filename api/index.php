@@ -83,12 +83,12 @@ foreach ($dirs as $dir) {
 $localSqlite = __DIR__ . '/../database/database.sqlite';
 $writableSqlite = $tmpDatabase . '/database.sqlite';
 
-if (!file_exists($writableSqlite)) {
-    if (file_exists($localSqlite)) {
+if (file_exists($localSqlite)) {
+    if (!file_exists($writableSqlite) || filesize($writableSqlite) === 0 || filesize($writableSqlite) !== filesize($localSqlite)) {
         @copy($localSqlite, $writableSqlite);
-    } else {
-        @touch($writableSqlite);
     }
+} else if (!file_exists($writableSqlite)) {
+    @touch($writableSqlite);
 }
 
 // Ensure APP_KEY has a valid fallback key if missing in Vercel env
