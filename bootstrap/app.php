@@ -20,9 +20,9 @@ $app = Application::configure(basePath: dirname(__DIR__))
         // 3. This is necessary for Vercel serverless where cookie sessions may not
         //    persist CSRF tokens reliably across cold starts
         $middleware->validateCsrfTokens(except: [
-            '/login',
-            '/logout',
-            '/enquire',
+            'login',
+            'logout',
+            'enquire',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
