@@ -1,6 +1,6 @@
 {
     "version": 2,
-    "buildCommand": "composer install --no-dev --optimize-autoloader --no-interaction --no-progress",
+    "buildCommand": "echo 'Vendor committed to git - no composer needed'",
     "outputDirectory": "public",
     "functions": {
         "api/index.php": {

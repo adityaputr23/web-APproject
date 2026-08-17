@@ -18,7 +18,8 @@
 /public/storage
 /storage/*.key
 /storage/pail
-/vendor
+# vendor is committed to git for Vercel serverless deployment
+# /vendor
 Homestead.json
 Homestead.yaml
 Thumbs.db
