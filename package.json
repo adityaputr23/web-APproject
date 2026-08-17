@@ -4,7 +4,7 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "vercel-build": "vite build",
+        "vercel-build": "echo 'Static assets already in public/ - skipping Vite build'",
         "dev": "vite"
     },
     "devDependencies": {
