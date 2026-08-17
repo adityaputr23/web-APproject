@@ -32,11 +32,10 @@ putenv("APP_ENV=production");
 $_ENV['APP_ENV']    = 'production';
 $_SERVER['APP_ENV'] = 'production';
 
-// Force cookie session — the only stateless-safe driver for Vercel serverless
-// (file sessions don't persist, database requires SQLite copy which is unreliable)
-putenv("SESSION_DRIVER=cookie");
-$_ENV['SESSION_DRIVER']  = 'cookie';
-$_SERVER['SESSION_DRIVER'] = 'cookie';
+// Use file session in /tmp/storage/framework/sessions (prevents huge cookie headers & 494 error)
+putenv("SESSION_DRIVER=file");
+$_ENV['SESSION_DRIVER']  = 'file';
+$_SERVER['SESSION_DRIVER'] = 'file';
 
 // Use file cache in /tmp (no DB needed for cache)
 putenv("CACHE_STORE=file");
@@ -159,10 +158,10 @@ try {
         $config->set('cache.default',      'file');
         $config->set('cache.stores.file.path', $tmpStorage . '/framework/cache/data');
 
-        // ---- COOKIE SESSION — no server-side storage needed ----
-        $config->set('session.driver',     'cookie');
+        // ---- FILE SESSION in /tmp/storage/framework/sessions ----
+        $config->set('session.driver',     'file');
+        $config->set('session.files',      $tmpStorage . '/framework/sessions');
         $config->set('session.lifetime',   120);
-        $config->set('session.encrypt',    true);   // Encrypt session data inside cookie
         $config->set('session.secure',     true);   // HTTPS-only (Vercel is always HTTPS)
         $config->set('session.same_site',  'lax');  // Allow normal navigation
         $config->set('session.domain',     null);   // Let browser handle domain

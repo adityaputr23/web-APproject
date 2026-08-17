@@ -18,9 +18,7 @@ return [
     |
     */
 
-    // On Vercel serverless, force cookie driver (file/database sessions don't persist).
-    // Locally, use whatever SESSION_DRIVER is set in .env.
-    'driver' => (getenv('VERCEL') || isset($_SERVER['VERCEL'])) ? 'cookie' : env('SESSION_DRIVER', 'file'),
+    'driver' => env('SESSION_DRIVER', 'file'),
 
     /*
     |--------------------------------------------------------------------------
