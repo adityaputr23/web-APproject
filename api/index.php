@@ -37,6 +37,11 @@ putenv("SESSION_DRIVER=file");
 $_ENV['SESSION_DRIVER']  = 'file';
 $_SERVER['SESSION_DRIVER'] = 'file';
 
+// Force BCRYPT_ROUNDS to integer 10 (prevents password_hash invalid cost error)
+putenv("BCRYPT_ROUNDS=10");
+$_ENV['BCRYPT_ROUNDS']  = 10;
+$_SERVER['BCRYPT_ROUNDS'] = 10;
+
 // Use file cache in /tmp (no DB needed for cache)
 putenv("CACHE_STORE=file");
 $_ENV['CACHE_STORE']  = 'file';

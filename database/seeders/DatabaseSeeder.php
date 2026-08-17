@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Alex Rivera',
             'email' => 'admin@apvisuals.com',
-            'password' => Hash::make('admin123'),
+            'password' => Hash::make('admin123', ['rounds' => 10]),
         ]);
 
         // 2. Create Default General Settings
