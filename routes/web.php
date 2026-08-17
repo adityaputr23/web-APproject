@@ -71,3 +71,47 @@ Route::get('/debug-session', function () {
     ]);
 });
 
+Route::get('/debug-hash', function () {
+    $results = [];
+
+    // Test 1: PASSWORD_BCRYPT
+    try {
+        $results['bcrypt'] = password_hash('admin123', PASSWORD_BCRYPT, ['cost' => 10]);
+    } catch (\Throwable $e) {
+        $results['bcrypt_error'] = get_class($e) . ': ' . $e->getMessage();
+    }
+
+    // Test 2: PASSWORD_DEFAULT
+    try {
+        $results['default'] = password_hash('admin123', PASSWORD_DEFAULT);
+    } catch (\Throwable $e) {
+        $results['default_error'] = get_class($e) . ': ' . $e->getMessage();
+    }
+
+    // Test 3: Argon2i
+    if (defined('PASSWORD_ARGON2I')) {
+        try {
+            $results['argon2i'] = password_hash('admin123', PASSWORD_ARGON2I);
+        } catch (\Throwable $e) {
+            $results['argon2i_error'] = get_class($e) . ': ' . $e->getMessage();
+        }
+    } else {
+        $results['argon2i'] = 'PASSWORD_ARGON2I not defined';
+    }
+
+    // Test 4: Argon2id
+    if (defined('PASSWORD_ARGON2ID')) {
+        try {
+            $results['argon2id'] = password_hash('admin123', PASSWORD_ARGON2ID);
+        } catch (\Throwable $e) {
+            $results['argon2id_error'] = get_class($e) . ': ' . $e->getMessage();
+        }
+    } else {
+        $results['argon2id'] = 'PASSWORD_ARGON2ID not defined';
+    }
+
+    $results['crypt_blowfish'] = defined('CRYPT_BLOWFISH') ? CRYPT_BLOWFISH : 'not defined';
+
+    return response()->json($results);
+});
+
