@@ -126,4 +126,47 @@ class CloudinaryService
 
         return $folder ? trim($folder, '/') . '/' . $filename : $filename;
     }
+
+    /**
+     * Upload the current SQLite database to Cloudinary raw storage.
+     * Ensures all admin updates (projects, settings, skills) persist across Vercel restarts & redeploys.
+     */
+    public function syncDatabase(): bool
+    {
+        $cloudinaryUrl = config('services.cloudinary.url')
+            ?: (env('CLOUDINARY_URL')
+            ?: (getenv('CLOUDINARY_URL')
+            ?: ($_SERVER['CLOUDINARY_URL']
+            ?: ($_ENV['CLOUDINARY_URL']
+            ?: 'cloudinary://734915755182871:IEJROZnMx30vNa21EYcOSdyF6XE@ttyvzu53'))));
+
+        if (empty($cloudinaryUrl) || !str_contains($cloudinaryUrl, 'cloudinary://')) {
+            return false;
+        }
+
+        try {
+            $dbPath = (getenv('VERCEL') || isset($_SERVER['VERCEL']))
+                ? '/tmp/database/database.sqlite'
+                : (config('database.connections.sqlite.database') ?: database_path('database.sqlite'));
+
+            if (!file_exists($dbPath) || filesize($dbPath) === 0) {
+                return false;
+            }
+
+            $cloudinary = new Cloudinary($cloudinaryUrl);
+            $cloudinary->uploadApi()->upload($dbPath, [
+                'folder'        => 'apvisuals/db',
+                'public_id'     => 'database',
+                'resource_type' => 'raw',
+                'overwrite'     => true,
+                'invalidate'    => true,
+            ]);
+
+            Log::info('Cloudinary DB Auto-Sync successful.');
+            return true;
+        } catch (Throwable $e) {
+            Log::error('Cloudinary DB Auto-Sync failed: ' . $e->getMessage());
+            return false;
+        }
+    }
 }

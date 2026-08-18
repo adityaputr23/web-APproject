@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 
 class EnquiryController extends Controller
 {
+    public function __construct(protected \App\Services\CloudinaryService $cloudinary) {}
+
     /**
      * Display a listing of enquiries.
      */
@@ -26,6 +28,8 @@ class EnquiryController extends Controller
             'is_read' => !$enquiry->is_read
         ]);
 
+        $this->cloudinary->syncDatabase();
+
         return redirect()->route('admin.enquiries.index')
             ->with('success', 'Enquiry status updated.');
     }
@@ -36,6 +40,8 @@ class EnquiryController extends Controller
     public function destroy(Enquiry $enquiry)
     {
         $enquiry->delete();
+
+        $this->cloudinary->syncDatabase();
 
         return redirect()->route('admin.enquiries.index')
             ->with('success', 'Enquiry deleted successfully.');

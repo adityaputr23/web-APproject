@@ -142,13 +142,22 @@ if ($dbConn !== 'mysql' || $dbHost === '127.0.0.1' || $dbHost === 'localhost') {
 
     @mkdir($tmpDatabase, 0755, true);
 
-    $localSqlite = __DIR__ . '/../database/database.sqlite';
-    if (file_exists($localSqlite)) {
-        if (!file_exists($writableSqlite)) {
-            @copy($localSqlite, $writableSqlite);
+    $remoteDbUrl = 'https://res.cloudinary.com/ttyvzu53/raw/upload/apvisuals/db/database.sqlite';
+
+    if (!file_exists($writableSqlite)) {
+        // Try fetching the synced SQLite database from Cloudinary CDN
+        $remoteData = @file_get_contents($remoteDbUrl);
+        if ($remoteData && strlen($remoteData) > 1000) {
+            @file_put_contents($writableSqlite, $remoteData);
+        } else {
+            // Local fallback from committed repository file
+            $localSqlite = __DIR__ . '/../database/database.sqlite';
+            if (file_exists($localSqlite)) {
+                @copy($localSqlite, $writableSqlite);
+            } else {
+                @touch($writableSqlite);
+            }
         }
-    } elseif (!file_exists($writableSqlite)) {
-        @touch($writableSqlite);
     }
 
     putenv("DB_CONNECTION=sqlite");

@@ -57,6 +57,9 @@ class ProjectController extends Controller
             unset($validated['asset_file']);
 
             $project = Project::create($validated);
+
+            // Auto-sync SQLite DB to Cloudinary CDN for permanent persistence
+            $this->cloudinary->syncDatabase();
         } catch (\Throwable $e) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
@@ -124,6 +127,9 @@ class ProjectController extends Controller
 
         $project->update($validated);
 
+        // Auto-sync SQLite DB to Cloudinary CDN for permanent persistence
+        $this->cloudinary->syncDatabase();
+
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success'  => true,
@@ -151,6 +157,9 @@ class ProjectController extends Controller
         }
 
         $project->delete();
+
+        // Auto-sync SQLite DB to Cloudinary CDN for permanent persistence
+        $this->cloudinary->syncDatabase();
 
         return redirect()->route('admin.projects.index')
             ->with('success', 'Project deleted successfully.');

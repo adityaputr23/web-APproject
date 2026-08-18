@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Mail;
 
 class PortfolioController extends Controller
 {
+    public function __construct(protected \App\Services\CloudinaryService $cloudinary) {}
+
     /**
      * Display the portfolio landing page.
      */
@@ -80,6 +82,9 @@ class PortfolioController extends Controller
 
         // Save to database (admin inbox)
         $enquiry = Enquiry::create($validated);
+
+        // Auto-sync SQLite DB to Cloudinary CDN for permanent persistence
+        $this->cloudinary->syncDatabase();
 
         // Send email notification to Gmail (non-blocking, won't fail the request)
         try {

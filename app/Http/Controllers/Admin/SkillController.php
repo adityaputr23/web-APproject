@@ -53,6 +53,9 @@ class SkillController extends Controller
         unset($validated['logo']);
         Skill::create($validated);
 
+        // Auto-sync SQLite DB to Cloudinary CDN for permanent persistence
+        $this->cloudinary->syncDatabase();
+
         return redirect()->route('admin.skills.index')
             ->with('success', 'Skill created successfully.');
     }
@@ -95,6 +98,9 @@ class SkillController extends Controller
         unset($validated['logo']);
         $skill->update($validated);
 
+        // Auto-sync SQLite DB to Cloudinary CDN for permanent persistence
+        $this->cloudinary->syncDatabase();
+
         return redirect()->route('admin.skills.index')
             ->with('success', 'Skill updated successfully.');
     }
@@ -113,6 +119,9 @@ class SkillController extends Controller
         }
 
         $skill->delete();
+
+        // Auto-sync SQLite DB to Cloudinary CDN for permanent persistence
+        $this->cloudinary->syncDatabase();
 
         return redirect()->route('admin.skills.index')
             ->with('success', 'Skill deleted successfully.');
