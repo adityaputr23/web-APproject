@@ -10,6 +10,47 @@ use Throwable;
 class CloudinaryService
 {
     /**
+     * Get Cloudinary upload signature data for direct client-side browser uploads.
+     * Bypasses serverless payload size limits (e.g., Vercel's 4.5MB limit).
+     */
+    public function getSignature(string $folder = 'apvisuals'): array
+    {
+        $cloudinaryUrl = config('services.cloudinary.url')
+            ?: (env('CLOUDINARY_URL')
+            ?: (getenv('CLOUDINARY_URL')
+            ?: ($_SERVER['CLOUDINARY_URL']
+            ?: ($_ENV['CLOUDINARY_URL']
+            ?: 'cloudinary://734915755182871:IEJROZnMx30vNa21EYcOSdyF6XE@ttyvzu53'))));
+
+        $parsed    = parse_url($cloudinaryUrl);
+        $apiKey    = $parsed['user'] ?? '734915755182871';
+        $apiSecret = $parsed['pass'] ?? 'IEJROZnMx30vNa21EYcOSdyF6XE';
+        $cloudName = $parsed['host'] ?? 'ttyvzu53';
+
+        $timestamp    = time();
+        $paramsToSign = [
+            'folder'    => $folder,
+            'timestamp' => $timestamp,
+        ];
+        ksort($paramsToSign);
+
+        $toSign = [];
+        foreach ($paramsToSign as $k => $v) {
+            $toSign[] = "{$k}={$v}";
+        }
+        $stringToSign = implode('&', $toSign) . $apiSecret;
+        $signature    = sha1($stringToSign);
+
+        return [
+            'cloud_name' => $cloudName,
+            'api_key'    => $apiKey,
+            'timestamp'  => $timestamp,
+            'signature'  => $signature,
+            'folder'     => $folder,
+        ];
+    }
+
+    /**
      * Upload a file (image or video) to Cloudinary or fallback to local public/images directory.
      *
      * @param UploadedFile $file

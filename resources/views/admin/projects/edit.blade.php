@@ -171,61 +171,129 @@ document.addEventListener('DOMContentLoaded', () => {
         previewArea.style.display = 'block';
     });
 
+    // Direct Cloudinary Client-Side Upload + Lightweight Laravel Metadata Update
     form.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const formData = new FormData(form);
-        const xhr = new XMLHttpRequest();
+        const file = fileInput.files[0];
 
-        xhr.open('POST', form.action, true);
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        if (file) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="ri-loader-4-line" style="display:inline-block;animation:adminSpin 1s linear infinite;"></i> Menyiapkan Upload...';
+            progressWrapper.style.display = 'block';
+            progressStatus.textContent = 'Mendapatkan izin upload...';
+            progressBar.style.width = '5%';
 
-        if (xhr.upload) {
-            xhr.upload.onprogress = function(event) {
-                if (event.lengthComputable) {
-                    const percent = Math.round((event.loaded / event.total) * 100);
-                    const loadedMB = (event.loaded / 1024 / 1024).toFixed(1);
-                    const totalMB = (event.total / 1024 / 1024).toFixed(1);
+            fetch('{{ route("admin.cloudinary.signature") }}')
+                .then(r => r.json())
+                .then(sig => {
+                    progressStatus.textContent = 'Mengupload langsung ke Cloudinary...';
+                    progressBar.style.width = '10%';
 
-                    progressWrapper.style.display = 'block';
-                    progressBar.style.width = percent + '%';
-                    progressPercent.textContent = percent + '%';
-                    progressStatus.textContent = `Mengupload file tanpa kompresi... ${loadedMB} MB / ${totalMB} MB`;
-                }
-            };
+                    const cData = new FormData();
+                    cData.append('file', file);
+                    cData.append('api_key', sig.api_key);
+                    cData.append('timestamp', sig.timestamp);
+                    cData.append('signature', sig.signature);
+                    cData.append('folder', sig.folder);
+
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', `https://api.cloudinary.com/v1_1/${sig.cloud_name}/auto/upload`, true);
+
+                    if (xhr.upload) {
+                        xhr.upload.onprogress = function(event) {
+                            if (event.lengthComputable) {
+                                const percent = Math.round((event.loaded / event.total) * 100);
+                                const loadedMB = (event.loaded / 1024 / 1024).toFixed(1);
+                                const totalMB  = (event.total / 1024 / 1024).toFixed(1);
+
+                                progressBar.style.width = percent + '%';
+                                progressPercent.textContent = percent + '%';
+                                progressStatus.textContent = `Mengupload file tanpa kompresi... ${loadedMB} MB / ${totalMB} MB`;
+                            }
+                        };
+                    }
+
+                    xhr.onload = function() {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            try {
+                                const cRes = JSON.parse(xhr.responseText);
+                                if (cRes.secure_url) {
+                                    progressStatus.textContent = 'Upload selesai! Menyimpan perubahan...';
+                                    sendProjectForm(cRes.secure_url);
+                                    return;
+                                }
+                            } catch(e) {}
+                        }
+                        alert('Gagal mengupload file ke Cloudinary CDN.');
+                        resetSubmitBtn();
+                    };
+
+                    xhr.onerror = function() {
+                        alert('Koneksi terputus saat mengupload file ke Cloudinary.');
+                        resetSubmitBtn();
+                    };
+
+                    xhr.send(cData);
+                })
+                .catch(err => {
+                    alert('Gagal mendapatkan signature upload: ' + err.message);
+                    resetSubmitBtn();
+                });
+        } else {
+            sendProjectForm(null);
         }
 
-        xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                progressStatus.textContent = 'Pembaruan selesai!';
-                progressBar.style.width = '100%';
-                window.location.href = "{{ route('admin.projects.index') }}";
-            } else {
-                let errMsg = 'Terjadi kesalahan saat menyimpan perubahan.';
-                try {
-                    const errRes = JSON.parse(xhr.responseText);
-                    if (errRes.errors) {
-                        errMsg = Object.values(errRes.errors).flat().join('\n');
-                    } else if (errRes.message) {
-                        errMsg = errRes.message;
-                    }
-                } catch(e) {}
-                alert(errMsg);
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="ri-check-line"></i> Save Changes';
-            }
-        };
+        function sendProjectForm(cloudinaryUrl) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="ri-loader-4-line" style="display:inline-block;animation:adminSpin 1s linear infinite;"></i> Menyimpan Perubahan...';
 
-        xhr.onerror = function() {
-            alert('Koneksi terputus saat mengirim data.');
+            const projectData = new FormData(form);
+            projectData.delete('asset_file'); // Strip large file from Laravel payload
+
+            if (cloudinaryUrl) {
+                projectData.set('asset_path', cloudinaryUrl);
+            }
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', form.action, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        const res = JSON.parse(xhr.responseText);
+                        window.location.href = res.redirect || "{{ route('admin.projects.index') }}";
+                    } catch(err) {
+                        window.location.href = "{{ route('admin.projects.index') }}";
+                    }
+                } else {
+                    let errMsg = 'Terjadi kesalahan saat menyimpan perubahan.';
+                    try {
+                        const errRes = JSON.parse(xhr.responseText);
+                        if (errRes.errors) {
+                            errMsg = Object.values(errRes.errors).flat().join('\n');
+                        } else if (errRes.message) {
+                            errMsg = errRes.message;
+                        }
+                    } catch(e) {}
+                    alert(errMsg);
+                    resetSubmitBtn();
+                }
+            };
+
+            xhr.onerror = function() {
+                alert('Koneksi terputus saat menyimpan perubahan.');
+                resetSubmitBtn();
+            };
+
+            xhr.send(projectData);
+        }
+
+        function resetSubmitBtn() {
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="ri-check-line"></i> Save Changes';
-        };
-
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="ri-loader-4-line" style="display:inline-block;animation:adminSpin 1s linear infinite;"></i> Menyimpan Perubahan...';
-
-        xhr.send(formData);
+        }
     });
 });
 </script>

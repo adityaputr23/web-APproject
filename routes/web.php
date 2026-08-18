@@ -37,6 +37,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Settings edit/update
     Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
     Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
+
+    // Cloudinary direct upload signature endpoint
+    Route::get('/cloudinary-signature', [ProjectController::class, 'getCloudinarySignature'])->name('cloudinary.signature');
 });
 
 // TEMPORARY DEBUG ROUTE — Remove after fixing

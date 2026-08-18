@@ -155,4 +155,13 @@ class ProjectController extends Controller
         return redirect()->route('admin.projects.index')
             ->with('success', 'Project deleted successfully.');
     }
+
+    /**
+     * Get Cloudinary upload signature for client-side direct upload.
+     */
+    public function getCloudinarySignature(Request $request)
+    {
+        $folder = $request->query('folder', 'apvisuals');
+        return response()->json($this->cloudinary->getSignature($folder));
+    }
 }
