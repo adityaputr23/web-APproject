@@ -51,6 +51,7 @@ class DatabaseSeeder extends Seeder
             'social_github' => 'https://github.com/adityaputr23',
             'email' => 'speedvisuals03@gmail.com',
             'profile_image' => 'profile.jpg',
+            'about_photo' => 'https://res.cloudinary.com/ttyvzu53/image/upload/v1787015885/apvisuals/evo2xlxwqp8nfhj9f3gz.png',
         ];
 
         foreach ($settings as $key => $value) {
@@ -85,6 +86,26 @@ class DatabaseSeeder extends Seeder
         // 4. Create Default Projects
         $projects = [
             [
+                'title' => 'Cinematic Video Detailing',
+                'description' => 'Visual storytelling and high speed video detailing showcase.',
+                'category' => 'Cinematography',
+                'tags' => 'Video, Cinematography, Editing',
+                'type' => 'video',
+                'asset_path' => 'https://res.cloudinary.com/ttyvzu53/video/upload/v1787015201/apvisuals/elvg4fafrx5dwhurdybq.mp4',
+                'project_url' => '#',
+                'order' => 1
+            ],
+            [
+                'title' => 'Motorcycle Detailing & Polish',
+                'description' => 'Exploring automotive aesthetics using high-end studio lighting and custom reflections.',
+                'category' => 'Photography',
+                'tags' => 'Photography, Automotive, Lighting',
+                'type' => 'image',
+                'asset_path' => 'https://res.cloudinary.com/ttyvzu53/image/upload/v1787015885/apvisuals/xnukgjeo33iznwaayael.jpg',
+                'project_url' => '#',
+                'order' => 2
+            ],
+            [
                 'title' => 'Deep Sea Project',
                 'description' => 'A cinematic explore into underwater habitats and marine typography. Shot on RED V-Raptor with custom marine enclosures.',
                 'category' => 'Cinematography',
@@ -92,7 +113,7 @@ class DatabaseSeeder extends Seeder
                 'type' => 'image',
                 'asset_path' => 'project1.jpg',
                 'project_url' => 'https://vimeo.com',
-                'order' => 1
+                'order' => 3
             ],
             [
                 'title' => 'Neon Portraiture',
@@ -102,7 +123,7 @@ class DatabaseSeeder extends Seeder
                 'type' => 'image',
                 'asset_path' => 'project2.jpg',
                 'project_url' => '#',
-                'order' => 2
+                'order' => 4
             ],
             [
                 'title' => 'Kinetic Light Trail',
@@ -112,7 +133,7 @@ class DatabaseSeeder extends Seeder
                 'type' => 'image',
                 'asset_path' => 'project3.jpg',
                 'project_url' => 'https://vimeo.com',
-                'order' => 3
+                'order' => 5
             ],
             [
                 'title' => 'Minimalist Dashboard UI',
@@ -122,7 +143,7 @@ class DatabaseSeeder extends Seeder
                 'type' => 'image',
                 'asset_path' => 'project4.jpg',
                 'project_url' => '#',
-                'order' => 4
+                'order' => 6
             ]
         ];
 
