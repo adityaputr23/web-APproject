@@ -19,7 +19,14 @@ class CloudinaryService
      */
     public function upload(UploadedFile $file, string $folder = '', ?string $customFilename = null): string
     {
-        $cloudinaryUrl = env('CLOUDINARY_URL') ?: (getenv('CLOUDINARY_URL') ?: ($_SERVER['CLOUDINARY_URL'] ?? ''));
+        $cloudinaryUrl = config('services.cloudinary.url')
+            ?: (env('CLOUDINARY_URL')
+            ?: (getenv('CLOUDINARY_URL')
+            ?: ($_SERVER['CLOUDINARY_URL']
+            ?: ($_ENV['CLOUDINARY_URL']
+            ?: 'cloudinary://734915755182871:IEJROZnMx30vNa21EYcOSdyF6XE@ttyvzu53'))));
+
+        $isVercel = (bool) (getenv('VERCEL') || isset($_SERVER['VERCEL']));
 
         // Check if Cloudinary URL is configured and valid (does not contain default placeholders)
         if (!empty($cloudinaryUrl) &&
@@ -29,9 +36,9 @@ class CloudinaryService
             try {
                 $cloudinary = new Cloudinary($cloudinaryUrl);
 
-                $mimeType = $file->getMimeType() ?? '';
+                $mimeType  = $file->getMimeType() ?? '';
                 $extension = strtolower($file->getClientOriginalExtension());
-                $isVideo = str_contains($mimeType, 'video') || in_array($extension, ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'flv', 'wmv', 'm4v']);
+                $isVideo   = str_contains($mimeType, 'video') || in_array($extension, ['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv', 'flv', 'wmv', 'm4v']);
 
                 $cloudinaryFolder = 'apvisuals' . ($folder ? '/' . trim($folder, '/') : '');
 
@@ -44,22 +51,27 @@ class CloudinaryService
                     $options['chunk_size'] = 6000000; // 6MB chunks for videos
                 }
 
-                $uploadResult = $cloudinary->uploadApi()->upload($file->getRealPath(), $options);
+                $filePath = $file->getRealPath() ?: $file->getPathname();
+
+                $uploadResult = $cloudinary->uploadApi()->upload($filePath, $options);
 
                 if (isset($uploadResult['secure_url'])) {
                     return $uploadResult['secure_url'];
                 }
+
+                throw new \RuntimeException('Cloudinary response does not contain secure_url');
             } catch (Throwable $e) {
                 Log::error('Cloudinary upload failed: ' . $e->getMessage(), [
                     'file'  => $file->getClientOriginalName(),
                     'trace' => $e->getTraceAsString(),
                 ]);
 
-                // If running on Vercel where filesystem is read-only, throw the exception to provide feedback
-                if (getenv('VERCEL') || isset($_SERVER['VERCEL'])) {
+                if ($isVercel) {
                     throw new \RuntimeException('Upload ke Cloudinary gagal: ' . $e->getMessage());
                 }
             }
+        } elseif ($isVercel) {
+            throw new \RuntimeException('Konfigurasi Cloudinary URL tidak ditemukan di server.');
         }
 
         // Fallback to local storage in public/images (for local dev)
@@ -69,7 +81,7 @@ class CloudinaryService
         }
 
         $filename = $customFilename ?: (time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension());
-        @$file->move($targetDir, $filename);
+        $file->move($targetDir, $filename);
 
         return $folder ? trim($folder, '/') . '/' . $filename : $filename;
     }
