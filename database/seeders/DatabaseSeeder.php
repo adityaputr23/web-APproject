@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
     {
         // 1. Create Default Admin User
         User::create([
-            'name' => 'Alex Rivera',
+            'name' => 'Aditya Putra',
             'email' => 'admin@apvisuals.com',
             'password' => Hash::make('admin123', ['rounds' => 10]),
         ]);
@@ -27,20 +27,29 @@ class DatabaseSeeder extends Seeder
         $settings = [
             'hero_title' => 'Merging Pixel with Logic.',
             'hero_subtitle' => 'A multidisciplinary creator specializing in high-end photography, cinematic video editing, and front-end web development. I craft digital experiences that are as functional as they are beautiful.',
+            'about_name' => 'Aditya Putra',
+            'about_role' => 'Cinematographer · Visual Director · Web Developer',
+            'about_location' => 'Pontianak, Kalimantan Barat',
+            'about_experience' => '9',
+            'about_projects' => '50',
+            'about_clients' => '20',
             'focus_title' => 'FOCUS: Performance & UI',
             'focus_description' => 'I build highly-optimized, accessible web applications with a focus on immersive user experiences and seamless interactions.',
             'philosophy_title' => 'The Philosophy',
-            'philosophy_text' => 'I believe that digital products should feel like second-nature to users. Whether it\'s a 30-second commercial or a complex SaaS platform, my approach remains the same: extreme attention-to-detail, technical rigor, and dynamic storytelling.',
-            'philosophy_point1' => 'Precision-engineered code for ultimate performance.',
-            'philosophy_point2' => 'Cinematic visual sense for genuine emotion.',
+            'philosophy_text' => 'I\'m Aditya Putra, a creative developer and visual creator from Indonesia. I combine technology and visual creativity to create digital experiences and visual content that are modern, engaging, and meaningful. My work spans web development, photography, videography, photo editing, and video editing. I enjoy turning ideas into polished digital products and visual content, from building responsive websites and applications to creating and editing photos and videos with attention to detail. I believe great creative work comes from the balance of technology, visual storytelling, and precision. Whether I\'m writing code, capturing a moment, or editing a visual, I always aim to create something that looks good, works well, and leaves an impression.',
+            'philosophy_point1_title' => 'Visual Craft',
+            'philosophy_point1' => 'Photography, videography, and professional photo & video editing focused on composition, detail, and storytelling.',
+            'philosophy_point2_title' => 'Web Development',
+            'philosophy_point2' => 'Building modern, responsive, and functional websites and applications with clean design and intuitive user experiences.',
+            'philosophy_point3_title' => 'Seamless Bridge',
             'philosophy_point3' => 'A seamless bridge between design and development.',
             'philosophy_quote' => 'Quality isn\'t an act, it is a habit.',
             'philosophy_quote_author' => 'Aristotle',
-            'social_instagram' => 'https://instagram.com',
-            'social_linkedin' => 'https://linkedin.com',
-            'social_github' => 'https://github.com',
-            'social_vimeo' => 'https://vimeo.com',
-            'email' => 'contact@apvisuals.com',
+            'social_instagram' => 'https://www.instagram.com/apvisualsgallery',
+            'social_tiktok' => 'https://www.tiktok.com/@ap.visuals_',
+            'social_linkedin' => 'https://www.linkedin.com/in/aditya-putra-2b9989325',
+            'social_github' => 'https://github.com/adityaputr23',
+            'email' => 'speedvisuals03@gmail.com',
             'profile_image' => 'profile.jpg',
         ];
 
