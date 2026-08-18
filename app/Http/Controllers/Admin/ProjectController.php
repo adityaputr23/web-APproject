@@ -49,13 +49,23 @@ class ProjectController extends Controller
             'order'       => 'required|integer',
         ]);
 
-        if ($request->hasFile('asset_file')) {
-            $validated['asset_path'] = $this->cloudinary->upload($request->file('asset_file'));
+        try {
+            if ($request->hasFile('asset_file')) {
+                $validated['asset_path'] = $this->cloudinary->upload($request->file('asset_file'));
+            }
+
+            unset($validated['asset_file']);
+
+            $project = Project::create($validated);
+        } catch (\Throwable $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal mengupload/menyimpan: ' . $e->getMessage(),
+                ], 422);
+            }
+            return back()->withErrors(['asset_file' => $e->getMessage()])->withInput();
         }
-
-        unset($validated['asset_file']);
-
-        $project = Project::create($validated);
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([

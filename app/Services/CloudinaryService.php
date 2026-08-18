@@ -19,7 +19,7 @@ class CloudinaryService
      */
     public function upload(UploadedFile $file, string $folder = '', ?string $customFilename = null): string
     {
-        $cloudinaryUrl = env('CLOUDINARY_URL');
+        $cloudinaryUrl = env('CLOUDINARY_URL') ?: (getenv('CLOUDINARY_URL') ?: ($_SERVER['CLOUDINARY_URL'] ?? ''));
 
         // Check if Cloudinary URL is configured and valid (does not contain default placeholders)
         if (!empty($cloudinaryUrl) &&
@@ -51,20 +51,25 @@ class CloudinaryService
                 }
             } catch (Throwable $e) {
                 Log::error('Cloudinary upload failed: ' . $e->getMessage(), [
-                    'file' => $file->getClientOriginalName(),
+                    'file'  => $file->getClientOriginalName(),
                     'trace' => $e->getTraceAsString(),
                 ]);
+
+                // If running on Vercel where filesystem is read-only, throw the exception to provide feedback
+                if (getenv('VERCEL') || isset($_SERVER['VERCEL'])) {
+                    throw new \RuntimeException('Upload ke Cloudinary gagal: ' . $e->getMessage());
+                }
             }
         }
 
-        // Fallback to local storage in public/images
+        // Fallback to local storage in public/images (for local dev)
         $targetDir = $folder ? public_path('images/' . trim($folder, '/')) : public_path('images');
         if (!file_exists($targetDir)) {
-            mkdir($targetDir, 0755, true);
+            @mkdir($targetDir, 0755, true);
         }
 
         $filename = $customFilename ?: (time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension());
-        $file->move($targetDir, $filename);
+        @$file->move($targetDir, $filename);
 
         return $folder ? trim($folder, '/') . '/' . $filename : $filename;
     }

@@ -27,6 +27,12 @@ putenv("APP_URL=https://{$host}");
 $_ENV['APP_URL']    = "https://{$host}";
 $_SERVER['APP_URL'] = "https://{$host}";
 
+// Cloudinary URL for media uploads on Vercel
+$cloudinaryUrl = getenv('CLOUDINARY_URL') ?: ($_ENV['CLOUDINARY_URL'] ?? 'cloudinary://734915755182871:IEJROZnMx30vNa21EYcOSdyF6XE@ttyvzu53');
+putenv("CLOUDINARY_URL={$cloudinaryUrl}");
+$_ENV['CLOUDINARY_URL']    = $cloudinaryUrl;
+$_SERVER['CLOUDINARY_URL'] = $cloudinaryUrl;
+
 // Set production env on Vercel
 putenv("APP_ENV=production");
 $_ENV['APP_ENV']    = 'production';
