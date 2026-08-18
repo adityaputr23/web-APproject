@@ -32,11 +32,35 @@ putenv("APP_ENV=production");
 $_ENV['APP_ENV']    = 'production';
 $_SERVER['APP_ENV'] = 'production';
 
-// Use cookie session (stateless — works across ALL Vercel lambda instances).
-// File sessions break on Vercel because /tmp is NOT shared between instances.
-putenv("SESSION_DRIVER=cookie");
-$_ENV['SESSION_DRIVER']  = 'cookie';
-$_SERVER['SESSION_DRIVER'] = 'cookie';
+// ---- SESSION: Cookie driver (stateless, works across ALL Vercel lambda instances) ----
+// putenv() is the CORRECT way to override config on Vercel — these values are read by
+// config/session.php via env() BEFORE the app bootstraps. $config->set() runs too late.
+putenv("SESSION_DRIVER=cookie");       // Stateless: data lives in the browser cookie
+putenv("SESSION_COOKIE=apv_sess_v4");  // v4: fresh name, forces new cookie, no stale data
+putenv("SESSION_ENCRYPT=false");       // Cookie driver auto-encrypts; do NOT double-encrypt
+putenv("SESSION_LIFETIME=120");
+putenv("SESSION_PATH=/");
+putenv("SESSION_DOMAIN=");             // Empty = use current request domain
+putenv("SESSION_SECURE_COOKIE=true");  // HTTPS-only (Vercel is always HTTPS)
+putenv("SESSION_SAME_SITE=lax");       // lax = cookie sent on top-level navigation/redirects
+
+$_ENV['SESSION_DRIVER']        = 'cookie';
+$_ENV['SESSION_COOKIE']        = 'apv_sess_v4';
+$_ENV['SESSION_ENCRYPT']       = 'false';
+$_ENV['SESSION_LIFETIME']      = '120';
+$_ENV['SESSION_PATH']          = '/';
+$_ENV['SESSION_DOMAIN']        = '';
+$_ENV['SESSION_SECURE_COOKIE'] = 'true';
+$_ENV['SESSION_SAME_SITE']     = 'lax';
+
+$_SERVER['SESSION_DRIVER']        = 'cookie';
+$_SERVER['SESSION_COOKIE']        = 'apv_sess_v4';
+$_SERVER['SESSION_ENCRYPT']       = 'false';
+$_SERVER['SESSION_LIFETIME']      = '120';
+$_SERVER['SESSION_PATH']          = '/';
+$_SERVER['SESSION_DOMAIN']        = '';
+$_SERVER['SESSION_SECURE_COOKIE'] = 'true';
+$_SERVER['SESSION_SAME_SITE']     = 'lax';
 
 // Force BCRYPT_ROUNDS to integer 10 (prevents password_hash invalid cost error)
 putenv("BCRYPT_ROUNDS=10");
@@ -166,18 +190,15 @@ try {
         $config->set('hashing.driver',     'bcrypt');
         $config->set('hashing.bcrypt.rounds', 10);
 
-        // ---- COOKIE SESSION — stateless, works across all Vercel lambda instances ----
-        // File sessions fail because each lambda has its own isolated /tmp.
-        // DO NOT set session.encrypt=true — cookie driver already encrypts via APP_KEY.
-        // Double encryption causes oversized cookies that browsers silently drop.
+        // ---- SESSION config (backup via config->set, primary via putenv above) ----
         $config->set('session.driver',    'cookie');
-        $config->set('session.cookie',    'apv_sess_v3');   // v3 = fresh, no stale cached cookies
+        $config->set('session.cookie',    'apv_sess_v4');
         $config->set('session.lifetime',  120);
-        $config->set('session.secure',    true);            // HTTPS-only (Vercel is always HTTPS)
-        $config->set('session.same_site', 'lax');           // Allow redirect navigation to carry cookie
-        $config->set('session.domain',    null);            // Use current request domain
+        $config->set('session.secure',    true);
+        $config->set('session.same_site', 'lax');
+        $config->set('session.domain',    null);
         $config->set('session.http_only', true);
-        $config->set('session.encrypt',   false);           // DO NOT double-encrypt
+        $config->set('session.encrypt',   false);
 
     }
 
