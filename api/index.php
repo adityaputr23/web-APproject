@@ -168,14 +168,17 @@ try {
 
         // ---- COOKIE SESSION — stateless, works across all Vercel lambda instances ----
         // File sessions fail because each lambda has its own isolated /tmp.
+        // DO NOT set session.encrypt=true — cookie driver already encrypts via APP_KEY.
+        // Double encryption causes oversized cookies that browsers silently drop.
         $config->set('session.driver',    'cookie');
-        $config->set('session.cookie',    'apv_sess_v2');
+        $config->set('session.cookie',    'apv_sess_v3');   // v3 = fresh, no stale cached cookies
         $config->set('session.lifetime',  120);
-        $config->set('session.secure',    true);   // HTTPS-only (Vercel is always HTTPS)
-        $config->set('session.same_site', 'lax');  // Allow normal cross-page navigation
-        $config->set('session.domain',    null);   // Let browser use current domain
+        $config->set('session.secure',    true);            // HTTPS-only (Vercel is always HTTPS)
+        $config->set('session.same_site', 'lax');           // Allow redirect navigation to carry cookie
+        $config->set('session.domain',    null);            // Use current request domain
         $config->set('session.http_only', true);
-        $config->set('session.encrypt',   true);   // Encrypt session payload
+        $config->set('session.encrypt',   false);           // DO NOT double-encrypt
+
     }
 
     $app->handleRequest(Request::capture());

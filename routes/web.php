@@ -39,3 +39,21 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
 });
 
+// TEMPORARY DEBUG ROUTE — Remove after fixing
+Route::get('/debug-session', function () {
+    return response()->json([
+        'session_driver'   => config('session.driver'),
+        'session_id'       => session()->getId(),
+        'session_all'      => session()->all(),
+        'is_authenticated' => auth()->check(),
+        'auth_user'        => auth()->check() ? auth()->user()->email : null,
+        'app_url'          => config('app.url'),
+        'cookies_received' => array_keys(request()->cookies->all()),
+        'db_user_count'    => \App\Models\User::count(),
+        'db_connection'    => config('database.default'),
+        'session_encrypt'  => config('session.encrypt'),
+        'session_secure'   => config('session.secure'),
+        'session_same_site'=> config('session.same_site'),
+        'session_cookie'   => config('session.cookie'),
+    ]);
+});
