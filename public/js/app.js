@@ -103,6 +103,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Helper: Convert YouTube/Vimeo/Google Drive URL to embed URL
+    function toEmbedUrl(url) {
+        if (!url) return null;
+        const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/i);
+        if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0`;
+
+        const viMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+        if (viMatch) return `https://player.vimeo.com/video/${viMatch[1]}?autoplay=1`;
+
+        const gdMatch = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([\w-]+)/i);
+        if (gdMatch) return `https://drive.google.com/file/d/${gdMatch[1]}/preview`;
+
+        return null;
+    }
+
     // 4. Project Lightbox Modal
     const modal = document.getElementById('projectModal');
     const modalClose = document.querySelector('.modal-close');
@@ -114,104 +129,130 @@ document.addEventListener('DOMContentLoaded', () => {
             const item = e.target.closest('.showcase-item');
             if (!item) return;
 
-            const title = item.getAttribute('data-title');
-            const desc = item.getAttribute('data-desc');
+            const title    = item.getAttribute('data-title');
+            const desc     = item.getAttribute('data-desc');
             const category = item.getAttribute('data-category');
-            const tags = item.getAttribute('data-tags') ? item.getAttribute('data-tags').split(',') : [];
-            const type = item.getAttribute('data-type');
-            const asset = item.getAttribute('data-asset');
-            const url = item.getAttribute('data-url');
+            const tags     = item.getAttribute('data-tags') ? item.getAttribute('data-tags').split(',') : [];
+            const type     = item.getAttribute('data-type');
+            const asset    = item.getAttribute('data-asset');
+            const url      = item.getAttribute('data-url');
 
-                document.getElementById('modalTitle').textContent = title;
-                document.getElementById('modalDesc').textContent = desc;
-                document.getElementById('modalCategory').textContent = category;
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalDesc').textContent = desc;
+            document.getElementById('modalCategory').textContent = category;
 
-                const modalImg = document.getElementById('modalImg');
-                const modalVideo = document.getElementById('modalVideo');
+            const modalImg    = document.getElementById('modalImg');
+            const modalVideo  = document.getElementById('modalVideo');
+            const modalIframe = document.getElementById('modalIframe');
 
-                const isVideo = type === 'video' || (asset && asset.match(/\.(mp4|webm|ogg|mov)$/i));
+            const embedUrl = item.getAttribute('data-embed-url') || toEmbedUrl(asset);
+            const isVideo  = type === 'video' || embedUrl || (asset && asset.match(/\.(mp4|webm|ogg|mov|avi|mkv|flv|wmv|m4v)$/i));
 
-                // Reset layout classes
+            // Reset layout classes
+            if (modalContent) {
+                modalContent.classList.remove('is-landscape-video', 'is-portrait-video', 'is-landscape-photo', 'is-portrait-photo', 'is-video');
+            }
+
+            if (embedUrl) {
+                if (modalImg) modalImg.classList.add('hide');
+                if (modalVideo) {
+                    modalVideo.classList.add('hide');
+                    modalVideo.pause();
+                    modalVideo.src = '';
+                }
+                if (modalIframe) {
+                    modalIframe.classList.remove('hide');
+                    modalIframe.src = embedUrl;
+                }
                 if (modalContent) {
-                    modalContent.classList.remove('is-landscape-video', 'is-portrait-video', 'is-landscape-photo', 'is-portrait-photo', 'is-video');
+                    modalContent.classList.add('is-landscape-video');
                 }
+                // Pause all autoplay grid videos to free resources
+                document.querySelectorAll('.showcase-video').forEach(v => v.pause());
+            } else if (isVideo) {
+                if (modalImg) modalImg.classList.add('hide');
+                if (modalIframe) {
+                    modalIframe.classList.add('hide');
+                    modalIframe.src = '';
+                }
+                if (modalVideo) {
+                    modalVideo.classList.remove('hide');
+                    modalVideo.src = asset;
+                    modalVideo.load();
 
-                if (isVideo) {
-                    if (modalImg) modalImg.classList.add('hide');
-                    if (modalVideo) {
-                        modalVideo.classList.remove('hide');
-                        modalVideo.src = asset;
-                        modalVideo.load();
-
-                        const applyVideoLayout = () => {
-                            const w = modalVideo.videoWidth;
-                            const h = modalVideo.videoHeight;
-                            if (w && h && modalContent) {
-                                const ratio = w / h;
-                                modalContent.classList.remove('is-landscape-video', 'is-portrait-video');
-                                if (ratio < 0.9) {
-                                    modalContent.classList.add('is-portrait-video'); // 9:16 vertical video player
-                                } else {
-                                    modalContent.classList.add('is-landscape-video'); // 16:9 widescreen video player
-                                }
+                    const applyVideoLayout = () => {
+                        const w = modalVideo.videoWidth;
+                        const h = modalVideo.videoHeight;
+                        if (w && h && modalContent) {
+                            const ratio = w / h;
+                            modalContent.classList.remove('is-landscape-video', 'is-portrait-video');
+                            if (ratio < 0.9) {
+                                modalContent.classList.add('is-portrait-video'); // 9:16 vertical video player
+                            } else {
+                                modalContent.classList.add('is-landscape-video'); // 16:9 widescreen video player
                             }
-                        };
+                        }
+                    };
 
-                        modalVideo.onloadedmetadata = applyVideoLayout;
-                        if (modalVideo.videoWidth) applyVideoLayout();
-                        modalVideo.play().catch(() => {});
-                    }
-                    // Pause all autoplay grid videos to free resources
-                    document.querySelectorAll('.showcase-video').forEach(v => v.pause());
-                } else {
-                    if (modalVideo) {
-                        modalVideo.classList.add('hide');
-                        modalVideo.pause();
-                        modalVideo.src = '';
-                    }
-                    if (modalImg) {
-                        modalImg.classList.remove('hide');
-                        modalImg.src = asset;
-                        modalImg.alt = title;
+                    modalVideo.onloadedmetadata = applyVideoLayout;
+                    if (modalVideo.videoWidth) applyVideoLayout();
+                    modalVideo.play().catch(() => {});
+                }
+                // Pause all autoplay grid videos to free resources
+                document.querySelectorAll('.showcase-video').forEach(v => v.pause());
+            } else {
+                if (modalVideo) {
+                    modalVideo.classList.add('hide');
+                    modalVideo.pause();
+                    modalVideo.src = '';
+                }
+                if (modalIframe) {
+                    modalIframe.classList.add('hide');
+                    modalIframe.src = '';
+                }
+                if (modalImg) {
+                    modalImg.classList.remove('hide');
+                    modalImg.src = asset;
+                    modalImg.alt = title;
 
-                        const applyImgLayout = () => {
-                            const w = modalImg.naturalWidth;
-                            const h = modalImg.naturalHeight;
-                            if (w && h && modalContent) {
-                                const ratio = w / h;
-                                modalContent.classList.remove('is-landscape-photo', 'is-portrait-photo');
-                                if (ratio < 0.9) {
-                                    modalContent.classList.add('is-portrait-photo'); // Portrait photo
-                                } else {
-                                    modalContent.classList.add('is-landscape-photo'); // Landscape photo
-                                }
+                    const applyImgLayout = () => {
+                        const w = modalImg.naturalWidth;
+                        const h = modalImg.naturalHeight;
+                        if (w && h && modalContent) {
+                            const ratio = w / h;
+                            modalContent.classList.remove('is-landscape-photo', 'is-portrait-photo');
+                            if (ratio < 0.9) {
+                                modalContent.classList.add('is-portrait-photo');
+                            } else {
+                                modalContent.classList.add('is-landscape-photo');
                             }
-                        };
+                        }
+                    };
 
-                        modalImg.onload = applyImgLayout;
-                        if (modalImg.complete && modalImg.naturalWidth) applyImgLayout();
-                    }
+                    modalImg.onload = applyImgLayout;
+                    if (modalImg.complete && modalImg.naturalWidth) applyImgLayout();
                 }
+            }
 
-                const tagsContainer = document.getElementById('modalTags');
-                tagsContainer.innerHTML = '';
-                tags.forEach(tag => {
-                    const span = document.createElement('span');
-                    span.className = 'mini-tag';
-                    span.textContent = tag.trim();
-                    tagsContainer.appendChild(span);
-                });
+            const tagsContainer = document.getElementById('modalTags');
+            tagsContainer.innerHTML = '';
+            tags.forEach(tag => {
+                const span = document.createElement('span');
+                span.className = 'mini-tag';
+                span.textContent = tag.trim();
+                tagsContainer.appendChild(span);
+            });
 
-                const actionBtn = document.getElementById('modalUrl');
-                if (url && url !== '#' && url !== '' && url !== 'null') {
-                    actionBtn.href = url;
-                    actionBtn.style.display = 'inline-flex';
-                } else {
-                    actionBtn.style.display = 'none';
-                }
+            const actionBtn = document.getElementById('modalUrl');
+            if (url && url !== '#' && url !== '' && url !== 'null') {
+                actionBtn.href = url;
+                actionBtn.style.display = 'inline-flex';
+            } else {
+                actionBtn.style.display = 'none';
+            }
 
-                modal.classList.add('open');
-                document.body.style.overflow = 'hidden';
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden';
         });
 
         const closeModal = () => {
@@ -221,6 +262,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (modalVideo) {
                 modalVideo.pause();
                 modalVideo.src = '';
+            }
+            const modalIframe = document.getElementById('modalIframe');
+            if (modalIframe) {
+                modalIframe.src = '';
             }
             // Resume grid autoplay videos
             document.querySelectorAll('.showcase-video').forEach(v => {

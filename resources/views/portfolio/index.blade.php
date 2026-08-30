@@ -201,7 +201,8 @@
                             $catLower = strtolower($project->category ?? '');
                             $titleLower = strtolower($project->title ?? '');
                             $isWebOrApp = str_contains($catLower, 'web') || str_contains($catLower, 'site') || str_contains($catLower, 'store') || str_contains($catLower, 'app') || str_contains($catLower, 'mobile') || str_contains($catLower, 'saas') || str_contains($catLower, 'system') || str_contains($titleLower, 'web') || str_contains($titleLower, 'store') || str_contains($titleLower, 'app');
-                            $isVideo = $project->type === 'video' || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov', '.mkv', '.avi']);
+                            $embedUrl = get_video_embed_url($project->asset_path);
+                            $isVideo = $project->type === 'video' || !empty($embedUrl) || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov', '.mkv', '.avi']);
                         @endphp
                         @if($photoCount < 6 && !$isVideo && !$isWebOrApp)
                             @php $photoCount++; @endphp
@@ -213,6 +214,7 @@
                                 data-tags="{{ $project->tags }}"
                                 data-type="{{ $project->type }}"
                                 data-asset="{{ asset_url($project->asset_path) }}"
+                                data-embed-url="{{ $embedUrl }}"
                                 data-url="{{ $project->project_url }}">
                                 <div class="showcase-media-wrapper">
                                     <img src="{{ asset_url($project->asset_path) }}" alt="{{ $project->title }}" class="showcase-img">
@@ -245,7 +247,12 @@
                 <div class="showcase-grid">
                     @php $videoCount = 0; @endphp
                     @foreach($projects as $project)
-                        @if($videoCount < 6 && ($project->type === 'video' || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov', '.mkv', '.avi'])))
+                        @php
+                            $embedUrl = get_video_embed_url($project->asset_path);
+                            $ytThumb  = get_video_thumbnail($project->asset_path);
+                            $isVideo  = $project->type === 'video' || !empty($embedUrl) || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov', '.mkv', '.avi']);
+                        @endphp
+                        @if($videoCount < 6 && $isVideo)
                             @php $videoCount++; @endphp
                             <div class="showcase-item"
                                 data-id="{{ $project->id }}"
@@ -255,9 +262,21 @@
                                 data-tags="{{ $project->tags }}"
                                 data-type="video"
                                 data-asset="{{ asset_url($project->asset_path) }}"
+                                data-embed-url="{{ $embedUrl }}"
                                 data-url="{{ $project->project_url }}">
                                 <div class="showcase-media-wrapper">
-                                    <video src="{{ asset_url($project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
+                                    @if($embedUrl)
+                                        @if($ytThumb)
+                                            <img src="{{ $ytThumb }}" alt="{{ $project->title }}" class="showcase-img">
+                                        @else
+                                            <div class="showcase-video-placeholder">
+                                                <i class="ri-play-circle-fill"></i>
+                                            </div>
+                                        @endif
+                                        <div class="video-play-badge"><i class="ri-play-fill"></i></div>
+                                    @else
+                                        <video src="{{ asset_url($project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
+                                    @endif
                                     <div class="showcase-overlay">
                                         <div class="showcase-content">
                                             <span class="showcase-category">{{ $project->category }}</span>
@@ -304,9 +323,12 @@
                     @php $webCount = 0; @endphp
                     @foreach($projects as $project)
                         @php
-                            $catLower = strtolower($project->category ?? '');
+                            $catLower   = strtolower($project->category ?? '');
                             $titleLower = strtolower($project->title ?? '');
-                            $isWeb = str_contains($catLower, 'web') || str_contains($catLower, 'site') || str_contains($catLower, 'store') || str_contains($catLower, 'landing') || str_contains($titleLower, 'web') || str_contains($titleLower, 'store') || str_contains($titleLower, 'catering');
+                            $isWeb      = str_contains($catLower, 'web') || str_contains($catLower, 'site') || str_contains($catLower, 'store') || str_contains($catLower, 'landing') || str_contains($titleLower, 'web') || str_contains($titleLower, 'store') || str_contains($titleLower, 'catering');
+                            $embedUrl   = get_video_embed_url($project->asset_path);
+                            $ytThumb    = get_video_thumbnail($project->asset_path);
+                            $isVideo    = $project->type === 'video' || !empty($embedUrl) || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov']);
                         @endphp
                         @if($webCount < 3 && $isWeb)
                             @php $webCount++; @endphp
@@ -318,9 +340,19 @@
                                 data-tags="{{ $project->tags }}"
                                 data-type="{{ $project->type }}"
                                 data-asset="{{ asset_url($project->asset_path) }}"
+                                data-embed-url="{{ $embedUrl }}"
                                 data-url="{{ $project->project_url }}">
                                 <div class="showcase-media-wrapper">
-                                    @if($project->type === 'video' || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov']))
+                                    @if($embedUrl)
+                                        @if($ytThumb)
+                                            <img src="{{ $ytThumb }}" alt="{{ $project->title }}" class="showcase-img">
+                                        @else
+                                            <div class="showcase-video-placeholder">
+                                                <i class="ri-play-circle-fill"></i>
+                                            </div>
+                                        @endif
+                                        <div class="video-play-badge"><i class="ri-play-fill"></i></div>
+                                    @elseif($isVideo)
                                         <video src="{{ asset_url($project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
                                     @else
                                         <img src="{{ asset_url($project->asset_path) }}" alt="{{ $project->title }}" class="showcase-img">
@@ -355,9 +387,12 @@
                     @php $appCount = 0; @endphp
                     @foreach($projects as $project)
                         @php
-                            $catLower = strtolower($project->category ?? '');
+                            $catLower   = strtolower($project->category ?? '');
                             $titleLower = strtolower($project->title ?? '');
-                            $isApp = str_contains($catLower, 'app') || str_contains($catLower, 'mobile') || str_contains($catLower, 'saas') || str_contains($catLower, 'system') || str_contains($titleLower, 'app');
+                            $isApp      = str_contains($catLower, 'app') || str_contains($catLower, 'mobile') || str_contains($catLower, 'saas') || str_contains($catLower, 'system') || str_contains($titleLower, 'app');
+                            $embedUrl   = get_video_embed_url($project->asset_path);
+                            $ytThumb    = get_video_thumbnail($project->asset_path);
+                            $isVideo    = $project->type === 'video' || !empty($embedUrl) || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov']);
                         @endphp
                         @if($appCount < 3 && $isApp)
                             @php $appCount++; @endphp
@@ -369,9 +404,19 @@
                                 data-tags="{{ $project->tags }}"
                                 data-type="{{ $project->type }}"
                                 data-asset="{{ asset_url($project->asset_path) }}"
+                                data-embed-url="{{ $embedUrl }}"
                                 data-url="{{ $project->project_url }}">
                                 <div class="showcase-media-wrapper">
-                                    @if($project->type === 'video' || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov']))
+                                    @if($embedUrl)
+                                        @if($ytThumb)
+                                            <img src="{{ $ytThumb }}" alt="{{ $project->title }}" class="showcase-img">
+                                        @else
+                                            <div class="showcase-video-placeholder">
+                                                <i class="ri-play-circle-fill"></i>
+                                            </div>
+                                        @endif
+                                        <div class="video-play-badge"><i class="ri-play-fill"></i></div>
+                                    @elseif($isVideo)
                                         <video src="{{ asset_url($project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
                                     @else
                                         <img src="{{ asset_url($project->asset_path) }}" alt="{{ $project->title }}" class="showcase-img">
@@ -528,6 +573,7 @@
                 <div class="modal-media">
                     <img id="modalImg" src="" alt="" class="modal-img">
                     <video id="modalVideo" src="" autoplay loop controls playsinline class="modal-video hide"></video>
+                    <iframe id="modalIframe" src="" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen class="modal-iframe hide"></iframe>
                 </div>
                 <div class="modal-info">
                     <div class="modal-info-left">
