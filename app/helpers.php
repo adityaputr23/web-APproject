@@ -57,7 +57,7 @@ if (!function_exists('get_video_embed_url')) {
 
 if (!function_exists('get_video_thumbnail')) {
     /**
-     * Get poster image URL for YouTube if applicable.
+     * Get poster image URL for YouTube or Google Drive if applicable.
      */
     function get_video_thumbnail(?string $url): ?string
     {
@@ -66,6 +66,11 @@ if (!function_exists('get_video_thumbnail')) {
         // YouTube thumbnail
         if (preg_match('/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/i', $url, $matches)) {
             return 'https://img.youtube.com/vi/' . $matches[1] . '/hqdefault.jpg';
+        }
+
+        // Google Drive thumbnail
+        if (preg_match('/drive\.google\.com\/(?:file\/d\/|open\?id=)([\w-]+)/i', $url, $matches)) {
+            return 'https://drive.google.com/thumbnail?id=' . $matches[1] . '&sz=w800';
         }
 
         return null;

@@ -267,10 +267,15 @@
                                 <div class="showcase-media-wrapper">
                                     @if($embedUrl)
                                         @if($ytThumb)
-                                            <img src="{{ $ytThumb }}" alt="{{ $project->title }}" class="showcase-img">
+                                            <img src="{{ $ytThumb }}" alt="{{ $project->title }}" class="showcase-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                                            <div class="showcase-video-placeholder" style="display:none;">
+                                                <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
+                                                <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
+                                            </div>
                                         @else
                                             <div class="showcase-video-placeholder">
-                                                <i class="ri-play-circle-fill"></i>
+                                                <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
+                                                <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
                                             </div>
                                         @endif
                                         <div class="video-play-badge"><i class="ri-play-fill"></i></div>
@@ -345,10 +350,15 @@
                                 <div class="showcase-media-wrapper">
                                     @if($embedUrl)
                                         @if($ytThumb)
-                                            <img src="{{ $ytThumb }}" alt="{{ $project->title }}" class="showcase-img">
+                                            <img src="{{ $ytThumb }}" alt="{{ $project->title }}" class="showcase-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                                            <div class="showcase-video-placeholder" style="display:none;">
+                                                <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
+                                                <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
+                                            </div>
                                         @else
                                             <div class="showcase-video-placeholder">
-                                                <i class="ri-play-circle-fill"></i>
+                                                <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
+                                                <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
                                             </div>
                                         @endif
                                         <div class="video-play-badge"><i class="ri-play-fill"></i></div>
@@ -409,10 +419,15 @@
                                 <div class="showcase-media-wrapper">
                                     @if($embedUrl)
                                         @if($ytThumb)
-                                            <img src="{{ $ytThumb }}" alt="{{ $project->title }}" class="showcase-img">
+                                            <img src="{{ $ytThumb }}" alt="{{ $project->title }}" class="showcase-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                                            <div class="showcase-video-placeholder" style="display:none;">
+                                                <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
+                                                <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
+                                            </div>
                                         @else
                                             <div class="showcase-video-placeholder">
-                                                <i class="ri-play-circle-fill"></i>
+                                                <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
+                                                <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
                                             </div>
                                         @endif
                                         <div class="video-play-badge"><i class="ri-play-fill"></i></div>
