@@ -23,6 +23,11 @@ Route::get('/logout', [LoginController::class, 'logout'])->name('logout.get'); /
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Admin Profile & Password Management
+    Route::get('/profile', [\App\Http\Controllers\Admin\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile', [\App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/password', [\App\Http\Controllers\Admin\ProfileController::class, 'updatePassword'])->name('profile.password');
+
     // Projects CRUD
     Route::resource('projects', ProjectController::class)->except(['show']);
     

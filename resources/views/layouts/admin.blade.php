@@ -49,6 +49,9 @@
                 <a href="{{ route('admin.enquiries.index') }}" class="menu-item {{ Request::is('admin/enquiries*') ? 'active' : '' }}">
                     <i class="ri-mail-line"></i> <span>Enquiries</span>
                 </a>
+                <a href="{{ route('admin.profile.edit') }}" class="menu-item {{ Request::is('admin/profile*') ? 'active' : '' }}">
+                    <i class="ri-user-settings-line"></i> <span>Admin Profile</span>
+                </a>
                 <a href="{{ route('admin.settings.edit') }}" class="menu-item {{ Request::is('admin/settings*') ? 'active' : '' }}">
                     <i class="ri-settings-4-line"></i> <span>Settings</span>
                 </a>
@@ -92,14 +95,14 @@
                     <button class="icon-btn" aria-label="Notifications"><i class="ri-notification-3-line"></i><span class="badge-dot"></span></button>
                     <a href="{{ route('admin.settings.edit') }}" class="icon-btn" aria-label="Settings"><i class="ri-settings-line"></i></a>
                     
-                    <div class="user-profile">
+                    <a href="{{ route('admin.profile.edit') }}" class="user-profile" style="text-decoration:none;">
                         @php $profileImg = \App\Models\Setting::getValue('profile_image', 'profile.jpg'); @endphp
-                        <img src="{{ asset('images/' . $profileImg) }}" alt="User profile photo" class="avatar-header">
+                        <img src="{{ asset_url($profileImg) }}" alt="User profile photo" class="avatar-header">
                         <div class="profile-meta">
                             <span class="user-name">{{ Auth::user()->name }}</span>
                             <span class="user-role">Admin</span>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </header>
 
