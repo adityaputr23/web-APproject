@@ -128,6 +128,7 @@
 @endsection
 
 @section('scripts')
+<script src="{{ asset('js/cloudinary-upload.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const fileInput     = document.getElementById('asset_file');
@@ -156,10 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const isVideo  = VIDEO_EXTS.includes(ext);
         const sizeMB   = (file.size / 1024 / 1024).toFixed(2);
 
-        // Auto-switch Media Type dropdown
         typeSelect.value = isVideo ? 'video' : 'image';
 
-        // Show file info
         fileNameEl.textContent = file.name;
         fileSizeEl.textContent = sizeMB + ' MB';
         badgeEl.textContent    = ext.toUpperCase();
@@ -167,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
         iconEl.style.color     = isVideo ? '#fb923c' : '#34d399';
         previewArea.style.display = 'block';
 
-        // Preview
         const objectUrl = URL.createObjectURL(file);
         if (isVideo) {
             videoPreview.src = objectUrl;
@@ -208,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Direct Cloudinary Client-Side Upload + Lightweight Laravel Metadata Save
+    // Chunked Cloudinary Upload + Lightweight Laravel Metadata Save
     form.addEventListener('submit', function(e) {
         e.preventDefault();
 
@@ -219,61 +217,33 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.innerHTML = '<i class="ri-loader-4-line" style="display:inline-block;animation:adminSpin 1s linear infinite;"></i> Menyiapkan Upload...';
             progressWrapper.style.display = 'block';
             progressStatus.textContent = 'Mendapatkan izin upload...';
-            progressBar.style.width = '5%';
+            progressBar.style.width = '3%';
+            progressPercent.textContent = '0%';
 
-            // Step 1: Get upload signature from Laravel endpoint
+            // Step 1: Get upload signature from Laravel
             fetch('{{ route("admin.cloudinary.signature") }}')
                 .then(r => r.json())
                 .then(sig => {
-                    progressStatus.textContent = 'Mengupload langsung ke Cloudinary...';
-                    progressBar.style.width = '10%';
+                    progressStatus.textContent = 'Mengupload ke Cloudinary (chunked)...';
+                    progressBar.style.width = '5%';
 
-                    // Step 2: Upload file directly to Cloudinary CDN
-                    const cData = new FormData();
-                    cData.append('file', file);
-                    cData.append('api_key', sig.api_key);
-                    cData.append('timestamp', sig.timestamp);
-                    cData.append('signature', sig.signature);
-                    cData.append('folder', sig.folder);
-
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('POST', `https://api.cloudinary.com/v1_1/${sig.cloud_name}/auto/upload`, true);
-
-                    if (xhr.upload) {
-                        xhr.upload.onprogress = function(event) {
-                            if (event.lengthComputable) {
-                                const percent = Math.round((event.loaded / event.total) * 100);
-                                const loadedMB = (event.loaded / 1024 / 1024).toFixed(1);
-                                const totalMB  = (event.total / 1024 / 1024).toFixed(1);
-
-                                progressBar.style.width = percent + '%';
-                                progressPercent.textContent = percent + '%';
-                                progressStatus.textContent = `Mengupload file tanpa kompresi... ${loadedMB} MB / ${totalMB} MB`;
-                            }
-                        };
-                    }
-
-                    xhr.onload = function() {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            try {
-                                const cRes = JSON.parse(xhr.responseText);
-                                if (cRes.secure_url) {
-                                    progressStatus.textContent = 'Upload selesai! Menyimpan project...';
-                                    sendProjectForm(cRes.secure_url);
-                                    return;
-                                }
-                            } catch(e) {}
+                    // Step 2: Chunked upload directly to Cloudinary CDN
+                    window.cloudinaryChunkedUpload(sig, file, {
+                        onProgress: function(percent, loadedMB, totalMB) {
+                            progressBar.style.width = percent + '%';
+                            progressPercent.textContent = percent + '%';
+                            progressStatus.textContent = `Mengupload file tanpa kompresi... ${loadedMB} MB / ${totalMB} MB`;
+                        },
+                        onSuccess: function(secureUrl) {
+                            progressStatus.textContent = 'Upload selesai! Menyimpan project...';
+                            progressPercent.textContent = '100%';
+                            sendProjectForm(secureUrl);
+                        },
+                        onError: function(errMsg) {
+                            alert('Gagal mengupload ke Cloudinary:\n' + errMsg);
+                            resetSubmitBtn();
                         }
-                        alert('Gagal mengupload file ke Cloudinary CDN.');
-                        resetSubmitBtn();
-                    };
-
-                    xhr.onerror = function() {
-                        alert('Koneksi terputus saat mengupload file ke Cloudinary.');
-                        resetSubmitBtn();
-                    };
-
-                    xhr.send(cData);
+                    });
                 })
                 .catch(err => {
                     alert('Gagal mendapatkan signature upload: ' + err.message);
@@ -288,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.innerHTML = '<i class="ri-loader-4-line" style="display:inline-block;animation:adminSpin 1s linear infinite;"></i> Menyimpan Project...';
 
             const projectData = new FormData(form);
-            projectData.delete('asset_file'); // Strip large file from Laravel payload
+            projectData.delete('asset_file'); // Jangan kirim file besar ke Laravel
 
             if (cloudinaryUrl) {
                 projectData.set('asset_path', cloudinaryUrl);
@@ -332,6 +302,9 @@ document.addEventListener('DOMContentLoaded', () => {
         function resetSubmitBtn() {
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="ri-check-line"></i> Create Project';
+            progressWrapper.style.display = 'none';
+            progressBar.style.width = '0%';
+            progressPercent.textContent = '0%';
         }
     });
 });
