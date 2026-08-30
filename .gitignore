@@ -26,3 +26,7 @@ Thumbs.db
 *.mp4
 /bootstrap/cache/*.php
 !/bootstrap/cache/.gitignore
+
+# Ignore local SQLite database so git push never overwrites live Vercel admin database
+database/*.sqlite
+database/*.sqlite-journal

@@ -142,15 +142,23 @@ if ($dbConn !== 'mysql' || $dbHost === '127.0.0.1' || $dbHost === 'localhost') {
 
     @mkdir($tmpDatabase, 0755, true);
 
-    $remoteDbUrl = 'https://res.cloudinary.com/ttyvzu53/raw/upload/apvisuals/db/database.sqlite';
+    // Cache-busting URL to bypass Cloudinary CDN edge caching on cold starts
+    $remoteDbUrl = 'https://res.cloudinary.com/ttyvzu53/raw/upload/apvisuals/db/database.sqlite?t=' . time();
 
     if (!file_exists($writableSqlite)) {
-        // Try fetching the synced SQLite database from Cloudinary CDN
-        $remoteData = @file_get_contents($remoteDbUrl);
+        // Try fetching the synced SQLite database from Cloudinary CDN with no-cache headers
+        $context = stream_context_create([
+            'http' => [
+                'method'  => 'GET',
+                'header'  => "Cache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\n",
+                'timeout' => 5,
+            ]
+        ]);
+        $remoteData = @file_get_contents($remoteDbUrl, false, $context);
         if ($remoteData && strlen($remoteData) > 1000) {
             @file_put_contents($writableSqlite, $remoteData);
         } else {
-            // Local fallback from committed repository file
+            // Local fallback from repository file
             $localSqlite = __DIR__ . '/../database/database.sqlite';
             if (file_exists($localSqlite)) {
                 @copy($localSqlite, $writableSqlite);
