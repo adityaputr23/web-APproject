@@ -17,7 +17,7 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
     
     <!-- Custom Vanilla Stylesheet -->
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ file_exists(public_path('css/app.css')) ? filemtime(public_path('css/app.css')) : time() }}">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=2">
     
     @yield('styles')
 </head>
