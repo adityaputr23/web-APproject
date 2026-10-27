@@ -59,7 +59,7 @@
             </div>
 
             <div class="form-group">
-                <label for="logo" class="form-label">Logo / Icon Image <span style="color:var(--text-muted);font-weight:400;">(Optional — for Creative Cards)</span></label>
+                <label for="logo" class="form-label">Logo / Icon Image <span style="color:var(--text-muted);font-weight:400;">(Optional — for Creative Cards & Engineering Hover Preview)</span></label>
                 <input type="file" id="logo" name="logo" class="form-control" accept="image/*">
                 <p class="form-input-help">Upload logo software (PNG/WebP/SVG). Ukuran rekomendasi: 80x80px atau lebih besar.</p>
                 @error('logo') <span class="error-message">{{ $message }}</span> @enderror

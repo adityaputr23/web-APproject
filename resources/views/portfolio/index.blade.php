@@ -161,7 +161,18 @@
                         <h3 class="toolkit-group-title"><i class="ri-code-s-slash-line"></i> Engineering</h3>
                         <div class="badges-grid">
                             @foreach($engineeringSkills as $skill)
-                                <span class="engineering-badge"><i class="ri-checkbox-circle-fill"></i> {{ $skill->name }}</span>
+                                <span class="engineering-badge {{ $skill->logo_path ? 'has-logo' : '' }}" tabindex="0">
+                                    <i class="ri-checkbox-circle-fill"></i>
+                                    <span class="badge-text">{{ $skill->name }}</span>
+                                    @if($skill->logo_path)
+                                        <span class="badge-tooltip" role="tooltip" aria-hidden="true">
+                                            <span class="badge-tooltip-preview">
+                                                <img src="{{ asset_url($skill->logo_path) }}" alt="{{ $skill->name }} logo" loading="lazy">
+                                            </span>
+                                            <span class="badge-tooltip-name">{{ $skill->name }}</span>
+                                        </span>
+                                    @endif
+                                </span>
                             @endforeach
                         </div>
                     </div>
@@ -248,9 +259,11 @@
                     @php $videoCount = 0; @endphp
                     @foreach($projects as $project)
                         @php
-                            $embedUrl = get_video_embed_url($project->asset_path);
-                            $ytThumb  = get_video_thumbnail($project->asset_path);
-                            $isVideo  = $project->type === 'video' || !empty($embedUrl) || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov', '.mkv', '.avi']);
+                            $embedUrl  = get_video_embed_url($project->asset_path);
+                            $streamUrl = get_google_drive_stream_url($project->asset_path);
+                            $driveId   = get_google_drive_id($project->asset_path);
+                            $ytThumb   = get_video_thumbnail($project->asset_path);
+                            $isVideo   = $project->type === 'video' || !empty($embedUrl) || !empty($streamUrl) || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov', '.mkv', '.avi']);
                         @endphp
                         @if($videoCount < 6 && $isVideo)
                             @php $videoCount++; @endphp
@@ -262,26 +275,25 @@
                                 data-tags="{{ $project->tags }}"
                                 data-type="video"
                                 data-asset="{{ asset_url($project->asset_path) }}"
+                                data-stream-url="{{ $streamUrl }}"
                                 data-embed-url="{{ $embedUrl }}"
-                                data-url="{{ $project->project_url }}">
+                                data-url="{{ $project->project_url ?: ($driveId ? 'https://drive.google.com/file/d/' . $driveId . '/view' : $project->asset_path) }}">
                                 <div class="showcase-media-wrapper">
-                                    @if($embedUrl)
-                                        @if($ytThumb)
-                                            <img src="{{ $ytThumb }}" alt="{{ $project->title }}" class="showcase-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
-                                            <div class="showcase-video-placeholder" style="display:none;">
-                                                <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
-                                                <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
-                                            </div>
-                                        @else
-                                            <div class="showcase-video-placeholder">
-                                                <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
-                                                <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
-                                            </div>
-                                        @endif
-                                        <div class="video-play-badge"><i class="ri-play-fill"></i></div>
+                                    @if($ytThumb)
+                                        <img src="{{ $ytThumb }}" alt="{{ $project->title }}" class="showcase-img" loading="lazy" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                                        <div class="showcase-video-placeholder" style="display:none;">
+                                            <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
+                                            <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
+                                        </div>
+                                    @elseif($embedUrl)
+                                        <div class="showcase-video-placeholder">
+                                            <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
+                                            <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
+                                        </div>
                                     @else
-                                        <video src="{{ asset_url($project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
+                                        <video src="{{ $streamUrl ?: asset_url($project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
                                     @endif
+                                    <div class="video-play-badge"><i class="ri-play-fill"></i></div>
                                     <div class="showcase-overlay">
                                         <div class="showcase-content">
                                             <span class="showcase-category">{{ $project->category }}</span>

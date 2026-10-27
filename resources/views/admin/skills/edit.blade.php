@@ -59,7 +59,7 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Logo / Icon Image <span style="color:var(--text-muted);font-weight:400;">(Optional — for Creative Cards)</span></label>
+                <label class="form-label">Logo / Icon Image <span style="color:var(--text-muted);font-weight:400;">(Optional — for Creative Cards & Engineering Hover Preview)</span></label>
                 @if($skill->logo_path)
                     <div style="margin-bottom:12px;display:flex;align-items:center;gap:12px;">
                         <img src="{{ asset_url($skill->logo_path) }}" alt="Current Logo" style="width:52px;height:52px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,0.05);padding:4px;border:1px solid rgba(255,255,255,0.1);">

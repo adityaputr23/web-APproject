@@ -566,6 +566,7 @@ ul {
 }
 
 .engineering-badge {
+    position: relative;
     background: rgba(22, 34, 102, 0.15);
     border: 1px solid rgba(208, 230, 253, 0.2);
     padding: 8px 16px;
@@ -577,17 +578,132 @@ ul {
     align-items: center;
     gap: 6px;
     transition: var(--transition-smooth);
+    user-select: none;
+}
+
+.engineering-badge.has-logo {
+    cursor: pointer;
 }
 
 .engineering-badge i {
     font-size: 14px;
     color: #D0E6FD;
+    transition: var(--transition-smooth);
 }
 
 .engineering-badge:hover {
-    background: rgba(22, 34, 102, 0.3);
-    border-color: rgba(208, 230, 253, 0.4);
-    transform: translateY(-1px);
+    background: rgba(22, 34, 102, 0.35);
+    border-color: rgba(208, 230, 253, 0.5);
+    transform: translateY(-2px);
+}
+
+.engineering-badge.has-logo:hover {
+    background: rgba(139, 92, 246, 0.18);
+    border-color: rgba(139, 92, 246, 0.55);
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.25);
+}
+
+.engineering-badge.has-logo:hover i {
+    color: var(--primary);
+}
+
+/* Tooltip Popup for Engineering Skills */
+.badge-tooltip {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%) translateY(8px) scale(0.92);
+    transform-origin: bottom center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                visibility 0.25s;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    min-width: 86px;
+    background: rgba(10, 13, 26, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(139, 92, 246, 0.35);
+    border-radius: 14px;
+    box-shadow: 0 14px 35px -4px rgba(0, 0, 0, 0.75),
+                0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+/* Tooltip Arrow */
+.badge-tooltip::before {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 7px;
+    border-style: solid;
+    border-color: rgba(139, 92, 246, 0.35) transparent transparent transparent;
+    z-index: 1;
+}
+
+.badge-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: rgba(10, 13, 26, 0.94) transparent transparent transparent;
+    z-index: 2;
+}
+
+.badge-tooltip-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 6px;
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.05);
+}
+
+.badge-tooltip-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: block;
+}
+
+.badge-tooltip-name {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #E2E8F0;
+    white-space: nowrap;
+    text-transform: capitalize;
+}
+
+/* Tooltip Active State */
+.engineering-badge:hover .badge-tooltip,
+.engineering-badge:focus .badge-tooltip,
+.engineering-badge:focus-within .badge-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.engineering-badge:hover .badge-tooltip-preview img {
+    transform: scale(1.08);
 }
 
 /* Focus Box */
@@ -837,27 +953,34 @@ section {
     position: relative;
     border-radius: var(--border-radius-lg);
     overflow: hidden;
-    background: rgba(5, 8, 20, 0.6);
+    background: #000000;
     border: 1px solid var(--card-border);
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 1 / 1;
     box-shadow: 0 20px 50px rgba(0,0,0,0.4);
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: var(--transition-smooth);
+}
+
+.about-photo-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    border-color: rgba(208, 230, 253, 0.25);
 }
 
 .about-photo {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    object-position: top center;
+    object-fit: contain;
+    object-position: center;
     display: block;
     transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
     padding: 0;
 }
 
 .about-photo-card:hover .about-photo {
-    transform: scale(1.04);
+    transform: scale(1.02);
 }
 
 .about-photo-placeholder {
@@ -889,6 +1012,7 @@ section {
     align-items: center;
     gap: 6px;
     white-space: nowrap;
+    z-index: 2;
 }
 
 .about-stats {
@@ -1597,6 +1721,8 @@ section {
 
 .modal.open .modal-content {
     transform: scale(1) translateY(0);
+}
+
 .modal-iframe {
     width: 100%;
     height: 100%;
@@ -2227,8 +2353,10 @@ section {
     }
 
     .about-photo-card {
-        aspect-ratio: 4 / 3;
-        max-height: 320px;
+        aspect-ratio: 1 / 1;
+        max-width: 320px;
+        width: 100%;
+        margin: 0 auto;
         border-radius: 20px;
     }
 
