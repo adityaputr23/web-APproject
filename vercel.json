@@ -30,7 +30,7 @@
             "dest": "/fonts/$1"
         },
         {
-            "src": "^/(favicon\\.ico|robots\\.txt)",
+            "src": "^/(favicon\\.ico|robots\\.txt|google[a-zA-Z0-9]+\\.html)",
             "dest": "/$1"
         },
         {

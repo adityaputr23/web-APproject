@@ -13,6 +13,12 @@ use App\Http\Controllers\Admin\EnquiryController;
 Route::get('/', [PortfolioController::class, 'index'])->name('portfolio.index');
 Route::post('/enquire', [PortfolioController::class, 'storeEnquiry'])->name('portfolio.enquire');
 
+// Google Search Console Verification
+Route::get('/google98664c600220de41.html', function () {
+    return response('google-site-verification: google98664c600220de41.html', 200)
+        ->header('Content-Type', 'text/html');
+});
+
 // Admin Auth Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
