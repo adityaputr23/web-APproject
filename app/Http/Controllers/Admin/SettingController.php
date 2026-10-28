@@ -113,9 +113,13 @@ class SettingController extends Controller
         }
 
         // Auto-sync SQLite DB to Cloudinary CDN for permanent persistence
-        $this->cloudinary->syncDatabase();
+        $synced = $this->cloudinary->syncDatabase();
+
+        $message = $synced
+            ? 'Settings updated and synchronized permanently.'
+            : 'Settings updated successfully.';
 
         return redirect()->route('admin.settings.edit')
-            ->with('success', 'Settings updated successfully.');
+            ->with('success', $message);
     }
 }

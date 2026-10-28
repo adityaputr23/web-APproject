@@ -141,31 +141,70 @@ class CloudinaryService
             ?: 'cloudinary://734915755182871:IEJROZnMx30vNa21EYcOSdyF6XE@ttyvzu53'))));
 
         if (empty($cloudinaryUrl) || !str_contains($cloudinaryUrl, 'cloudinary://')) {
+            Log::warning('Cloudinary DB Auto-Sync skipped: CLOUDINARY_URL is missing or invalid.');
             return false;
         }
 
         try {
-            $dbPath = (getenv('VERCEL') || isset($_SERVER['VERCEL']))
+            // Force PDO SQLite to flush all pending transactions, wal/journal logs, and close open locks
+            try {
+                if (\Illuminate\Support\Facades\DB::connection()->getPdo()) {
+                    \Illuminate\Support\Facades\DB::disconnect();
+                }
+            } catch (Throwable $e) {
+                // Ignore if DB connection not established yet
+            }
+
+            $isVercel = (bool) (getenv('VERCEL') || isset($_SERVER['VERCEL']));
+            $dbPath = $isVercel
                 ? '/tmp/database/database.sqlite'
                 : (config('database.connections.sqlite.database') ?: database_path('database.sqlite'));
 
             if (!file_exists($dbPath) || filesize($dbPath) === 0) {
+                Log::warning('Cloudinary DB Auto-Sync skipped: DB file does not exist or empty.', ['path' => $dbPath]);
                 return false;
             }
 
             $cloudinary = new Cloudinary($cloudinaryUrl);
-            $cloudinary->uploadApi()->upload($dbPath, [
+
+            // 1. Upload as primary 'database.sqlite'
+            $result = $cloudinary->uploadApi()->upload($dbPath, [
                 'folder'        => 'apvisuals/db',
-                'public_id'     => 'database',
+                'public_id'     => 'database.sqlite',
                 'resource_type' => 'raw',
                 'overwrite'     => true,
                 'invalidate'    => true,
             ]);
 
-            Log::info('Cloudinary DB Auto-Sync successful.');
+            // 2. Also upload as legacy 'database' for 100% backward compatibility
+            try {
+                $cloudinary->uploadApi()->upload($dbPath, [
+                    'folder'        => 'apvisuals/db',
+                    'public_id'     => 'database',
+                    'resource_type' => 'raw',
+                    'overwrite'     => true,
+                    'invalidate'    => true,
+                ]);
+            } catch (Throwable $legacyEx) {
+                // Non-critical if legacy alias upload fails
+            }
+
+            // 3. Keep local repository database file updated if running locally
+            $repoDb = database_path('database.sqlite');
+            if ($dbPath !== $repoDb && file_exists(dirname($repoDb)) && is_writable(dirname($repoDb))) {
+                @copy($dbPath, $repoDb);
+            }
+
+            Log::info('Cloudinary DB Auto-Sync successful.', [
+                'version'    => $result['version'] ?? null,
+                'secure_url' => $result['secure_url'] ?? null,
+            ]);
+
             return true;
         } catch (Throwable $e) {
-            Log::error('Cloudinary DB Auto-Sync failed: ' . $e->getMessage());
+            Log::error('Cloudinary DB Auto-Sync failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
             return false;
         }
     }

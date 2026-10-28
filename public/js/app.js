@@ -103,7 +103,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Helper: Convert YouTube/Vimeo/Google Drive URL to embed URL
+    // Helper: Google Drive ID extraction
+    function getGoogleDriveId(url) {
+        if (!url) return null;
+        const match = url.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:.*&)?id=)|drive\.usercontent\.google\.com\/download\?id=)([\w-]+)/i);
+        return match ? match[1] : null;
+    }
+
+    // Helper: Google Drive streamable MP4 URL
+    function getGoogleDriveStreamUrl(url) {
+        const id = getGoogleDriveId(url);
+        return id ? `https://drive.usercontent.google.com/download?id=${id}&confirm=t` : null;
+    }
+
+    // Helper: Convert YouTube/Vimeo URL to embed URL
     function toEmbedUrl(url) {
         if (!url) return null;
         const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/i);
@@ -111,9 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const viMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
         if (viMatch) return `https://player.vimeo.com/video/${viMatch[1]}?autoplay=1`;
-
-        const gdMatch = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([\w-]+)/i);
-        if (gdMatch) return `https://drive.google.com/file/d/${gdMatch[1]}/preview`;
 
         return null;
     }
@@ -135,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const tags     = item.getAttribute('data-tags') ? item.getAttribute('data-tags').split(',') : [];
             const type     = item.getAttribute('data-type');
             const asset    = item.getAttribute('data-asset');
-            const url      = item.getAttribute('data-url');
+            let   url      = item.getAttribute('data-url');
 
             document.getElementById('modalTitle').textContent = title;
             document.getElementById('modalDesc').textContent = desc;
@@ -145,31 +155,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const modalVideo  = document.getElementById('modalVideo');
             const modalIframe = document.getElementById('modalIframe');
 
-            const embedUrl = item.getAttribute('data-embed-url') || toEmbedUrl(asset);
-            const isVideo  = type === 'video' || embedUrl || (asset && asset.match(/\.(mp4|webm|ogg|mov|avi|mkv|flv|wmv|m4v)$/i));
+            const driveId   = getGoogleDriveId(asset) || getGoogleDriveId(url);
+            const streamUrl = item.getAttribute('data-stream-url') || (driveId ? `https://drive.usercontent.google.com/download?id=${driveId}&confirm=t` : null);
+            const embedUrl  = item.getAttribute('data-embed-url') || toEmbedUrl(asset) || toEmbedUrl(url);
+            const isVideo   = type === 'video' || Boolean(streamUrl) || Boolean(embedUrl) || Boolean(asset && asset.match(/\.(mp4|webm|ogg|mov|avi|mkv|flv|wmv|m4v)$/i));
 
             // Reset layout classes
             if (modalContent) {
                 modalContent.classList.remove('is-landscape-video', 'is-portrait-video', 'is-landscape-photo', 'is-portrait-photo', 'is-video');
             }
 
-            if (embedUrl) {
-                if (modalImg) modalImg.classList.add('hide');
-                if (modalVideo) {
-                    modalVideo.classList.add('hide');
-                    modalVideo.pause();
-                    modalVideo.src = '';
-                }
-                if (modalIframe) {
-                    modalIframe.classList.remove('hide');
-                    modalIframe.src = embedUrl;
-                }
-                if (modalContent) {
-                    modalContent.classList.add('is-landscape-video');
-                }
-                // Pause all autoplay grid videos to free resources
-                document.querySelectorAll('.showcase-video').forEach(v => v.pause());
-            } else if (isVideo) {
+            if (streamUrl || (isVideo && !embedUrl)) {
+                // Direct HTML5 video streaming (MP4 files or Google Drive raw stream)
+                const videoSource = streamUrl || asset;
                 if (modalImg) modalImg.classList.add('hide');
                 if (modalIframe) {
                     modalIframe.classList.add('hide');
@@ -177,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (modalVideo) {
                     modalVideo.classList.remove('hide');
-                    modalVideo.src = asset;
+                    modalVideo.src = videoSource;
                     modalVideo.load();
 
                     const applyVideoLayout = () => {
@@ -197,10 +195,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     modalVideo.onloadedmetadata = applyVideoLayout;
                     if (modalVideo.videoWidth) applyVideoLayout();
                     modalVideo.play().catch(() => {});
+
+                    modalVideo.onerror = () => {
+                        // Fallback to Google Drive iframe if direct stream is blocked
+                        if (driveId && modalIframe) {
+                            console.warn('Direct video streaming blocked, falling back to Google Drive preview iframe');
+                            modalVideo.classList.add('hide');
+                            modalIframe.classList.remove('hide');
+                            modalIframe.src = `https://drive.google.com/file/d/${driveId}/preview`;
+                        }
+                    };
+                }
+                if (modalContent) {
+                    modalContent.classList.add('is-landscape-video');
+                }
+                // Pause all autoplay grid videos to free resources
+                document.querySelectorAll('.showcase-video').forEach(v => v.pause());
+            } else if (embedUrl) {
+                // YouTube or Vimeo iframe embed
+                if (modalImg) modalImg.classList.add('hide');
+                if (modalVideo) {
+                    modalVideo.classList.add('hide');
+                    modalVideo.pause();
+                    modalVideo.src = '';
+                }
+                if (modalIframe) {
+                    modalIframe.classList.remove('hide');
+                    modalIframe.src = embedUrl;
+                }
+                if (modalContent) {
+                    modalContent.classList.add('is-landscape-video');
                 }
                 // Pause all autoplay grid videos to free resources
                 document.querySelectorAll('.showcase-video').forEach(v => v.pause());
             } else {
+                // Static image view
                 if (modalVideo) {
                     modalVideo.classList.add('hide');
                     modalVideo.pause();
@@ -243,10 +272,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 tagsContainer.appendChild(span);
             });
 
+            // Action button (External link or Google Drive link)
             const actionBtn = document.getElementById('modalUrl');
+            if (!url && driveId) {
+                url = `https://drive.google.com/file/d/${driveId}/view`;
+            }
+
             if (url && url !== '#' && url !== '' && url !== 'null') {
                 actionBtn.href = url;
                 actionBtn.style.display = 'inline-flex';
+                if (driveId) {
+                    actionBtn.innerHTML = '<i class="ri-external-link-line"></i> Buka di Google Drive';
+                } else {
+                    actionBtn.innerHTML = '<i class="ri-external-link-line"></i> View Project';
+                }
             } else {
                 actionBtn.style.display = 'none';
             }

@@ -194,7 +194,7 @@ function switchAssetTab(tab) {
     }
 }
 
-// Convert YouTube/Vimeo URL to embeddable URL
+// Convert YouTube/Vimeo/Google Drive URL to embeddable URL
 function toEmbedUrl(url) {
     if (!url) return null;
     // YouTube
@@ -203,6 +203,9 @@ function toEmbedUrl(url) {
     // Vimeo
     const viMatch = url.match(/vimeo\.com\/(\d+)/);
     if (viMatch) return `https://player.vimeo.com/video/${viMatch[1]}`;
+    // Google Drive
+    const driveMatch = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([\w-]+)/);
+    if (driveMatch) return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
     return null;
 }
 

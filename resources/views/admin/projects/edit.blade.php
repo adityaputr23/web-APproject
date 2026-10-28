@@ -209,6 +209,8 @@ function toEmbedUrl(url) {
     if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
     const viMatch = url.match(/vimeo\.com\/(\d+)/);
     if (viMatch) return `https://player.vimeo.com/video/${viMatch[1]}`;
+    const driveMatch = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([\w-]+)/);
+    if (driveMatch) return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
     return null;
 }
 

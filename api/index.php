@@ -142,19 +142,59 @@ if ($dbConn !== 'mysql' || $dbHost === '127.0.0.1' || $dbHost === 'localhost') {
 
     @mkdir($tmpDatabase, 0755, true);
 
-    // Cache-busting URL to bypass Cloudinary CDN edge caching on cold starts
+    // Direct URLs for fallback
     $remoteDbUrl = 'https://res.cloudinary.com/ttyvzu53/raw/upload/apvisuals/db/database.sqlite?t=' . time();
+    $legacyDbUrl = 'https://res.cloudinary.com/ttyvzu53/raw/upload/apvisuals/db/database?t=' . time();
 
     if (!file_exists($writableSqlite)) {
-        // Try fetching the synced SQLite database from Cloudinary CDN with no-cache headers
-        $context = stream_context_create([
-            'http' => [
-                'method'  => 'GET',
-                'header'  => "Cache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\n",
-                'timeout' => 5,
-            ]
-        ]);
-        $remoteData = @file_get_contents($remoteDbUrl, false, $context);
+        $remoteData = null;
+
+        // 1. Try querying Cloudinary Admin API to get the latest versioned URL (completely bypasses 30-day CDN cache)
+        if (!empty($cloudinaryUrl) && str_contains($cloudinaryUrl, 'cloudinary://')) {
+            try {
+                $cld = new \Cloudinary\Cloudinary($cloudinaryUrl);
+                $asset = $cld->adminApi()->asset('apvisuals/db/database.sqlite', ['resource_type' => 'raw']);
+                if (!empty($asset['secure_url'])) {
+                    $context = stream_context_create([
+                        'http' => [
+                            'method'  => 'GET',
+                            'header'  => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)\r\nCache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\n",
+                            'timeout' => 8,
+                        ],
+                        'ssl' => [
+                            'verify_peer'      => false,
+                            'verify_peer_name' => false,
+                        ]
+                    ]);
+                    $data = @file_get_contents($asset['secure_url'], false, $context);
+                    if ($data && strlen($data) > 1000) {
+                        $remoteData = $data;
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Admin API error or rate limit, proceed to fallback URLs below
+            }
+        }
+
+        // 2. Direct Cloudinary fetch fallback if Admin API did not return data
+        if (!$remoteData || strlen($remoteData) <= 1000) {
+            $context = stream_context_create([
+                'http' => [
+                    'method'  => 'GET',
+                    'header'  => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)\r\nCache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\n",
+                    'timeout' => 8,
+                ],
+                'ssl' => [
+                    'verify_peer'      => false,
+                    'verify_peer_name' => false,
+                ]
+            ]);
+            $remoteData = @file_get_contents($remoteDbUrl, false, $context);
+            if (!$remoteData || strlen($remoteData) <= 1000) {
+                $remoteData = @file_get_contents($legacyDbUrl, false, $context);
+            }
+        }
+
         if ($remoteData && strlen($remoteData) > 1000) {
             @file_put_contents($writableSqlite, $remoteData);
         } else {
