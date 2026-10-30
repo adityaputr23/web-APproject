@@ -17,7 +17,7 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
     
     <!-- Custom Vanilla Stylesheet -->
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=2">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v=3">
     
     @yield('styles')
 </head>
@@ -26,7 +26,7 @@
     @yield('content')
 
     <!-- Custom JavaScript -->
-    <script src="{{ asset('js/app.js') }}"></script>
+    <script src="{{ asset('js/app.js') }}?v=3"></script>
     @yield('scripts')
 </body>
 </html>

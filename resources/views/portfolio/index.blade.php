@@ -597,10 +597,13 @@
         <span class="modal-close"><i class="ri-close-line"></i></span>
         <div class="modal-content" id="modalContent">
             <div class="modal-grid">
-                <div class="modal-media">
+                <div class="modal-media" id="modalMediaContainer">
                     <img id="modalImg" src="" alt="" class="modal-img">
                     <video id="modalVideo" src="" autoplay loop controls playsinline class="modal-video hide"></video>
                     <iframe id="modalIframe" src="" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen class="modal-iframe hide"></iframe>
+                    <div id="modalScrollHint" class="modal-scroll-hint hide">
+                        <i class="ri-mouse-line"></i> Scroll untuk lihat desain lengkap
+                    </div>
                 </div>
                 <div class="modal-info">
                     <div class="modal-info-left">
@@ -611,9 +614,14 @@
                         </div>
                         <p id="modalDesc" class="modal-desc">Project description details go here...</p>
                     </div>
-                    <a id="modalUrl" href="#" target="_blank" class="btn btn-primary modal-action-btn">
-                        <i class="ri-external-link-line"></i> View Project
-                    </a>
+                    <div class="modal-actions-wrap">
+                        <a id="modalUrl" href="#" target="_blank" class="btn btn-primary modal-action-btn">
+                            <i class="ri-external-link-line"></i> View Project
+                        </a>
+                        <a id="modalFullImg" href="#" target="_blank" class="btn btn-secondary modal-action-btn hide">
+                            <i class="ri-fullscreen-line"></i> Buka Full Size
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

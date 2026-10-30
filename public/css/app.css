@@ -1830,51 +1830,132 @@ section {
     flex-direction: column;
 }
 
-/* 3. Portrait Photo (3:4 or 9:16) */
+/* 3. Tall / Long Mockup Photo (Websites, Landing Pages, Infographics, UI designs) */
+.modal-content.is-tall-photo {
+    max-width: 1080px;
+}
+.modal-content.is-tall-photo .modal-grid {
+    display: grid;
+    grid-template-columns: minmax(460px, 1.3fr) 1fr;
+    max-height: 85vh;
+}
+.modal-content.is-tall-photo .modal-media {
+    max-height: 85vh;
+    aspect-ratio: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #060914;
+    display: block;
+    position: relative;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(208, 230, 253, 0.35) rgba(6, 9, 20, 0.85);
+}
+.modal-content.is-tall-photo .modal-media::-webkit-scrollbar {
+    width: 7px;
+}
+.modal-content.is-tall-photo .modal-media::-webkit-scrollbar-track {
+    background: rgba(6, 9, 20, 0.85);
+}
+.modal-content.is-tall-photo .modal-media::-webkit-scrollbar-thumb {
+    background: rgba(208, 230, 253, 0.25);
+    border-radius: 4px;
+}
+.modal-content.is-tall-photo .modal-media::-webkit-scrollbar-thumb:hover {
+    background: rgba(208, 230, 253, 0.5);
+}
+.modal-content.is-tall-photo .modal-img {
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    object-fit: unset !important;
+    display: block !important;
+    cursor: zoom-in;
+}
+.modal-content.is-tall-photo .modal-info {
+    padding: 36px 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+.modal-content.is-tall-photo .modal-info-left {
+    display: flex;
+    flex-direction: column;
+}
+
+/* 4. Portrait Photo (3:4 or 4:5 or 9:16) */
 .modal-content.is-portrait-photo {
-    max-width: 860px;
+    max-width: 920px;
 }
 .modal-content.is-portrait-photo .modal-grid {
     display: grid;
-    grid-template-columns: 380px 1fr;
+    grid-template-columns: minmax(360px, 1.15fr) 1fr;
+    max-height: 85vh;
 }
 .modal-content.is-portrait-photo .modal-media {
-    aspect-ratio: 3 / 4;
-    background: #000;
+    aspect-ratio: auto;
+    max-height: 85vh;
+    background: #060914;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 .modal-content.is-portrait-photo .modal-img {
+    max-width: 100%;
+    max-height: 85vh;
+    width: auto;
+    height: auto;
     object-fit: contain;
+    cursor: zoom-in;
 }
 .modal-content.is-portrait-photo .modal-info {
     padding: 36px 32px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    max-height: 85vh;
+    overflow-y: auto;
 }
 .modal-content.is-portrait-photo .modal-info-left {
     display: flex;
     flex-direction: column;
 }
 
-/* 4. Landscape Photo (16:10 or 16:9) */
+/* 5. Landscape Photo (16:10 or 16:9 or 4:3) */
 .modal-content.is-landscape-photo {
-    max-width: 1000px;
+    max-width: 1080px;
 }
 .modal-content.is-landscape-photo .modal-grid {
     display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
+    grid-template-columns: 1.3fr 0.9fr;
+    max-height: 85vh;
 }
 .modal-content.is-landscape-photo .modal-media {
-    aspect-ratio: 16 / 10;
+    aspect-ratio: auto;
+    max-height: 85vh;
+    background: #060914;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 .modal-content.is-landscape-photo .modal-img {
-    object-fit: cover;
+    max-width: 100%;
+    max-height: 85vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    cursor: zoom-in;
 }
 .modal-content.is-landscape-photo .modal-info {
     padding: 36px 32px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    max-height: 85vh;
+    overflow-y: auto;
 }
 .modal-content.is-landscape-photo .modal-info-left {
     display: flex;
@@ -1971,6 +2052,47 @@ section {
     align-self: flex-start;
     padding: 12px 24px;
     font-size: 13px;
+}
+
+.modal-actions-wrap {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.modal-scroll-hint {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(14, 22, 58, 0.9);
+    border: 1px solid rgba(208, 230, 253, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #D0E6FD;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+    pointer-events: none;
+    z-index: 10;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    animation: floatHint 2s infinite ease-in-out;
+}
+
+.modal-scroll-hint.hide {
+    display: none !important;
+}
+
+@keyframes floatHint {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-4px); }
 }
 
 /* ============================================================
@@ -2506,7 +2628,8 @@ section {
     .modal-content.is-portrait-video,
     .modal-content.is-portrait-photo,
     .modal-content.is-landscape-video,
-    .modal-content.is-landscape-photo {
+    .modal-content.is-landscape-photo,
+    .modal-content.is-tall-photo {
         max-width: 100% !important;
         max-height: 90vh !important;
         overflow-y: auto !important;
@@ -2519,7 +2642,8 @@ section {
     .modal-content.is-portrait-video .modal-grid,
     .modal-content.is-portrait-photo .modal-grid,
     .modal-content.is-landscape-photo .modal-grid,
-    .modal-content.is-landscape-video .modal-grid {
+    .modal-content.is-landscape-video .modal-grid,
+    .modal-content.is-tall-photo .modal-grid {
         display: flex !important;
         flex-direction: column !important;
         grid-template-columns: 1fr !important;
@@ -2541,6 +2665,24 @@ section {
         overflow: hidden !important;
     }
 
+    .modal-content.is-tall-photo .modal-media {
+        width: 100% !important;
+        max-height: 48vh !important;
+        aspect-ratio: auto !important;
+        background: #060914 !important;
+        display: block !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    .modal-content.is-tall-photo .modal-img {
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        display: block !important;
+        object-fit: unset !important;
+    }
+
     .modal-img,
     .modal-video,
     .modal-content.is-portrait-video .modal-video,
@@ -2556,6 +2698,7 @@ section {
     .modal-content.is-portrait-video .modal-info,
     .modal-content.is-portrait-photo .modal-info,
     .modal-content.is-landscape-photo .modal-info,
+    .modal-content.is-tall-photo .modal-info,
     .modal-content.is-landscape-video .modal-info {
         padding: 20px 16px !important;
         display: flex !important;

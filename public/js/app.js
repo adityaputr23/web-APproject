@@ -160,9 +160,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const embedUrl  = item.getAttribute('data-embed-url') || toEmbedUrl(asset) || toEmbedUrl(url);
             const isVideo   = type === 'video' || Boolean(streamUrl) || Boolean(embedUrl) || Boolean(asset && asset.match(/\.(mp4|webm|ogg|mov|avi|mkv|flv|wmv|m4v)$/i));
 
-            // Reset layout classes
+            // Reset layout classes & scroll position
             if (modalContent) {
-                modalContent.classList.remove('is-landscape-video', 'is-portrait-video', 'is-landscape-photo', 'is-portrait-photo', 'is-video');
+                modalContent.classList.remove('is-landscape-video', 'is-portrait-video', 'is-landscape-photo', 'is-portrait-photo', 'is-tall-photo', 'is-video');
+            }
+            const modalMedia = document.getElementById('modalMediaContainer') || document.querySelector('.modal-media');
+            if (modalMedia) {
+                modalMedia.scrollTop = 0;
+            }
+            const scrollHint = document.getElementById('modalScrollHint');
+            if (scrollHint) {
+                scrollHint.classList.add('hide');
+            }
+            const fullImgBtn = document.getElementById('modalFullImg');
+            if (fullImgBtn) {
+                fullImgBtn.classList.add('hide');
+                fullImgBtn.style.display = 'none';
             }
 
             if (streamUrl || (isVideo && !embedUrl)) {
@@ -243,16 +256,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     modalImg.classList.remove('hide');
                     modalImg.src = asset;
                     modalImg.alt = title;
+                    modalImg.title = 'Klik untuk buka ukuran asli di tab baru';
 
                     const applyImgLayout = () => {
                         const w = modalImg.naturalWidth;
                         const h = modalImg.naturalHeight;
                         if (w && h && modalContent) {
                             const ratio = w / h;
-                            modalContent.classList.remove('is-landscape-photo', 'is-portrait-photo');
-                            if (ratio < 0.9) {
+                            modalContent.classList.remove('is-landscape-photo', 'is-portrait-photo', 'is-tall-photo');
+                            if (ratio < 0.75) {
+                                // Tall / full-page website landing page / poster
+                                modalContent.classList.add('is-tall-photo');
+                                if (scrollHint) {
+                                    scrollHint.classList.remove('hide');
+                                }
+                            } else if (ratio < 1.0) {
+                                // Standard portrait (3:4, 4:5, 9:16)
                                 modalContent.classList.add('is-portrait-photo');
                             } else {
+                                // Landscape (16:9, 4:3, etc.)
                                 modalContent.classList.add('is-landscape-photo');
                             }
                         }
@@ -260,6 +282,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     modalImg.onload = applyImgLayout;
                     if (modalImg.complete && modalImg.naturalWidth) applyImgLayout();
+
+                    // Click image directly to open original full-size in new tab
+                    modalImg.onclick = () => {
+                        if (modalImg.src) window.open(modalImg.src, '_blank');
+                    };
+                }
+
+                // Full image button setup
+                if (fullImgBtn && asset) {
+                    fullImgBtn.href = asset;
+                    fullImgBtn.classList.remove('hide');
+                    fullImgBtn.style.display = 'inline-flex';
+                }
+
+                // Scroll listener for hiding scroll hint
+                if (modalMedia && scrollHint) {
+                    modalMedia.onscroll = () => {
+                        if (modalMedia.scrollTop > 35) {
+                            scrollHint.classList.add('hide');
+                        }
+                    };
                 }
             }
 
