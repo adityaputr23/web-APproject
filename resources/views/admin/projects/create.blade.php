@@ -159,6 +159,53 @@
                 </div>
             </div>
 
+            {{-- Thumbnail Upload Section (untuk video, opsional untuk semua) --}}
+            <div class="form-group" id="thumbnailSection">
+                <label class="form-label">
+                    <i class="ri-image-2-line" style="color:#34d399;"></i>
+                    Custom Thumbnail
+                    <span style="font-size:11px;color:rgba(255,255,255,0.35);font-weight:400;margin-left:6px;">(opsional — untuk video, sangat disarankan)</span>
+                </label>
+                <div style="background:rgba(52,211,153,0.04);border:1px solid rgba(52,211,153,0.2);border-radius:14px;padding:16px;">
+                    <p style="font-size:12px;color:rgba(255,255,255,0.45);margin:0 0 12px;">
+                        <i class="ri-information-line" style="color:#34d399;"></i>
+                        Upload gambar thumbnail yang akan ditampilkan sebagai preview di portfolio. Sangat berguna untuk project video.
+                    </p>
+                    <div class="file-drop-zone" id="thumbDropZone" style="padding:24px;border-color:rgba(52,211,153,0.25);">
+                        <i class="ri-image-add-line" style="font-size:30px;color:rgba(52,211,153,0.6);margin-bottom:8px;display:block;"></i>
+                        <p style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:10px;">Drag & drop thumbnail di sini, atau</p>
+                        <label for="thumbnail_file" class="btn btn-secondary" style="cursor:pointer;display:inline-flex;margin-bottom:0;border-color:rgba(52,211,153,0.3);">
+                            <i class="ri-folder-image-line"></i> Pilih Thumbnail
+                        </label>
+                        <input type="file" id="thumbnail_file" name="thumbnail_file" style="display:none;" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml">
+                        <p style="margin-top:12px;font-size:11px;color:rgba(255,255,255,0.3);">JPG, PNG, WEBP, GIF &nbsp;|&nbsp; Maks: <strong style="color:rgba(255,255,255,0.5);">10 MB</strong></p>
+                    </div>
+                    <div id="thumbPreviewArea" style="display:none;margin-top:12px;">
+                        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:12px;">
+                            <img id="thumbPreviewImg" src="" alt="" style="width:80px;height:52px;object-fit:cover;border-radius:8px;flex-shrink:0;">
+                            <div style="flex:1;min-width:0;">
+                                <p id="thumbFileName" style="font-size:13px;font-weight:600;color:#e2e2e2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;"></p>
+                                <p id="thumbFileSize" style="font-size:11px;color:rgba(255,255,255,0.4);margin:2px 0 0;"></p>
+                            </div>
+                            <button type="button" onclick="clearThumbnail()" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;flex-shrink:0;">
+                                <i class="ri-delete-bin-line"></i> Hapus
+                            </button>
+                        </div>
+                    </div>
+                    {{-- Thumbnail Progress --}}
+                    <div id="thumbProgressWrapper" style="display:none;margin-top:12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            <span id="thumbProgressStatus" style="font-size:12px;font-weight:600;color:#34d399;">Mengupload thumbnail...</span>
+                            <span id="thumbProgressPercent" style="font-size:13px;font-weight:800;color:#ffffff;">0%</span>
+                        </div>
+                        <div style="width:100%;height:8px;background:rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);">
+                            <div id="thumbProgressBar" style="width:0%;height:100%;background:linear-gradient(90deg,#059669,#34d399);border-radius:10px;transition:width 0.15s ease;"></div>
+                        </div>
+                    </div>
+                    @error('thumbnail_file') <span class="error-message" style="display:block;margin-top:8px;">{{ $message }}</span> @enderror
+                </div>
+            </div>
+
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary" id="submitBtn">
                     <i class="ri-check-line"></i> Create Project
@@ -326,6 +373,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 600);
     });
 
+    const thumbInput       = document.getElementById('thumbnail_file');
+    const thumbDropZone    = document.getElementById('thumbDropZone');
+    const thumbPreviewArea = document.getElementById('thumbPreviewArea');
+    const thumbPreviewImg  = document.getElementById('thumbPreviewImg');
+    const thumbFileNameEl  = document.getElementById('thumbFileName');
+    const thumbFileSizeEl  = document.getElementById('thumbFileSize');
+    const thumbProgWrapper = document.getElementById('thumbProgressWrapper');
+    const thumbProgBar     = document.getElementById('thumbProgressBar');
+    const thumbProgPct     = document.getElementById('thumbProgressPercent');
+    const thumbProgStatus  = document.getElementById('thumbProgressStatus');
+
+    let uploadedThumbnailUrl = null;
+
+    function handleThumbnail(file) {
+        if (!file) return;
+        const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+        thumbFileNameEl.textContent = file.name;
+        thumbFileSizeEl.textContent = sizeMB + ' MB';
+        const url = URL.createObjectURL(file);
+        thumbPreviewImg.src = url;
+        thumbPreviewArea.style.display = 'block';
+    }
+
+    window.clearThumbnail = function() {
+        thumbInput.value = '';
+        thumbPreviewArea.style.display = 'none';
+        thumbPreviewImg.src = '';
+        uploadedThumbnailUrl = null;
+    };
+
+    thumbInput.addEventListener('change', () => {
+        if (thumbInput.files[0]) handleThumbnail(thumbInput.files[0]);
+    });
+
+    thumbDropZone.addEventListener('dragover', e => {
+        e.preventDefault();
+        thumbDropZone.style.borderColor = 'rgba(52,211,153,0.7)';
+        thumbDropZone.style.background  = 'rgba(52,211,153,0.08)';
+    });
+    thumbDropZone.addEventListener('dragleave', () => {
+        thumbDropZone.style.borderColor = '';
+        thumbDropZone.style.background  = '';
+    });
+    thumbDropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        thumbDropZone.style.borderColor = '';
+        thumbDropZone.style.background  = '';
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            thumbInput.files = dt.files;
+            handleThumbnail(file);
+        }
+    });
+
     form.addEventListener('submit', function(e) {
         e.preventDefault();
 
@@ -373,7 +476,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         onSuccess: function(secureUrl) {
                             progressStatus.textContent = 'Upload selesai! Menyimpan project...';
                             progressPercent.textContent = '100%';
-                            sendProjectForm(secureUrl);
+                            // Now upload thumbnail if any
+                            uploadThumbnailThenSave(secureUrl);
                         },
                         onError: function(errMsg) {
                             alert('Gagal mengupload ke Cloudinary:\n' + errMsg);
@@ -386,19 +490,58 @@ document.addEventListener('DOMContentLoaded', () => {
                     resetSubmitBtn();
                 });
         } else {
-            sendProjectForm(null);
+            uploadThumbnailThenSave(null);
         }
 
+        function uploadThumbnailThenSave(assetUrl) {
+            const thumbFile = thumbInput ? thumbInput.files[0] : null;
+            if (!thumbFile) {
+                sendProjectForm(assetUrl, null);
+                return;
+            }
+            thumbProgWrapper.style.display = 'block';
+            thumbProgStatus.textContent = 'Mendapatkan izin upload thumbnail...';
+            thumbProgBar.style.width = '5%';
 
-        function sendProjectForm(cloudinaryUrl) {
+            fetch('{{ route("admin.cloudinary.signature") }}?folder=apvisuals/thumbnails')
+                .then(r => r.json())
+                .then(sig => {
+                    thumbProgStatus.textContent = 'Mengupload thumbnail...';
+                    window.cloudinaryChunkedUpload(sig, thumbFile, {
+                        onProgress: function(percent) {
+                            thumbProgBar.style.width = percent + '%';
+                            thumbProgPct.textContent = percent + '%';
+                        },
+                        onSuccess: function(thumbUrl) {
+                            thumbProgStatus.textContent = 'Thumbnail terupload!';
+                            thumbProgPct.textContent = '100%';
+                            sendProjectForm(assetUrl, thumbUrl);
+                        },
+                        onError: function(errMsg) {
+                            alert('Gagal mengupload thumbnail:\n' + errMsg);
+                            resetSubmitBtn();
+                        }
+                    });
+                })
+                .catch(err => {
+                    alert('Gagal mendapatkan signature thumbnail: ' + err.message);
+                    resetSubmitBtn();
+                });
+        }
+
+        function sendProjectForm(cloudinaryUrl, thumbnailUrl) {
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="ri-loader-4-line" style="display:inline-block;animation:adminSpin 1s linear infinite;"></i> Menyimpan Project...';
 
             const projectData = new FormData(form);
             projectData.delete('asset_file'); // Jangan kirim file besar ke Laravel
+            projectData.delete('thumbnail_file');
 
             if (cloudinaryUrl) {
                 projectData.set('asset_path', cloudinaryUrl);
+            }
+            if (thumbnailUrl) {
+                projectData.set('thumbnail_path', thumbnailUrl);
             }
 
             const xhr = new XMLHttpRequest();

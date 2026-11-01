@@ -38,15 +38,17 @@ class ProjectController extends Controller
         @ini_set('memory_limit', '512M');
 
         $validated = $request->validate([
-            'title'       => 'required|string|max:255',
-            'category'    => 'required|string|max:255',
-            'description' => 'required|string',
-            'tags'        => 'nullable|string',
-            'type'        => 'required|in:image,video',
-            'asset_file'  => 'required_without:asset_path|file|mimes:jpeg,png,jpg,gif,svg,webp,mp4,webm,ogg,mov,avi,mkv,flv,wmv,m4v|max:524288',
-            'asset_path'  => 'nullable|string',
-            'project_url' => 'nullable|string',
-            'order'       => 'required|integer',
+            'title'          => 'required|string|max:255',
+            'category'       => 'required|string|max:255',
+            'description'    => 'required|string',
+            'tags'           => 'nullable|string',
+            'type'           => 'required|in:image,video',
+            'asset_file'     => 'required_without:asset_path|file|mimes:jpeg,png,jpg,gif,svg,webp,mp4,webm,ogg,mov,avi,mkv,flv,wmv,m4v|max:524288',
+            'asset_path'     => 'nullable|string',
+            'thumbnail_file' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp|max:10240',
+            'thumbnail_path' => 'nullable|string',
+            'project_url'    => 'nullable|string',
+            'order'          => 'required|integer',
         ]);
 
         try {
@@ -54,7 +56,12 @@ class ProjectController extends Controller
                 $validated['asset_path'] = $this->cloudinary->upload($request->file('asset_file'));
             }
 
+            if ($request->hasFile('thumbnail_file')) {
+                $validated['thumbnail_path'] = $this->cloudinary->upload($request->file('thumbnail_file'), 'apvisuals/thumbnails');
+            }
+
             unset($validated['asset_file']);
+            unset($validated['thumbnail_file']);
 
             $project = Project::create($validated);
 
@@ -99,15 +106,17 @@ class ProjectController extends Controller
         @ini_set('memory_limit', '512M');
 
         $validated = $request->validate([
-            'title'       => 'required|string|max:255',
-            'category'    => 'required|string|max:255',
-            'description' => 'required|string',
-            'tags'        => 'nullable|string',
-            'type'        => 'required|in:image,video',
-            'asset_file'  => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp,mp4,webm,ogg,mov,avi,mkv,flv,wmv,m4v|max:524288',
-            'asset_path'  => 'nullable|string',
-            'project_url' => 'nullable|string',
-            'order'       => 'required|integer',
+            'title'          => 'required|string|max:255',
+            'category'       => 'required|string|max:255',
+            'description'    => 'required|string',
+            'tags'           => 'nullable|string',
+            'type'           => 'required|in:image,video',
+            'asset_file'     => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp,mp4,webm,ogg,mov,avi,mkv,flv,wmv,m4v|max:524288',
+            'asset_path'     => 'nullable|string',
+            'thumbnail_file' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp|max:10240',
+            'thumbnail_path' => 'nullable|string',
+            'project_url'    => 'nullable|string',
+            'order'          => 'required|integer',
         ]);
 
         if ($request->hasFile('asset_file')) {
@@ -123,7 +132,12 @@ class ProjectController extends Controller
             $validated['asset_path'] = $this->cloudinary->upload($request->file('asset_file'));
         }
 
+        if ($request->hasFile('thumbnail_file')) {
+            $validated['thumbnail_path'] = $this->cloudinary->upload($request->file('thumbnail_file'), 'apvisuals/thumbnails');
+        }
+
         unset($validated['asset_file']);
+        unset($validated['thumbnail_file']);
 
         $project->update($validated);
 
