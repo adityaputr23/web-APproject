@@ -107,6 +107,32 @@ if (!function_exists('get_video_thumbnail')) {
             return 'https://lh3.googleusercontent.com/d/' . $driveId . '=w800';
         }
 
+        // Cloudinary video thumbnail auto-generation (swap video extension to .jpg)
+        if (str_contains($url, 'cloudinary.com') && (str_contains($url, '/video/upload/') || preg_match('/\.(mp4|webm|mov|mkv|avi|flv|wmv|m4v)$/i', $url))) {
+            return preg_replace('/\.(mp4|webm|mov|mkv|avi|flv|wmv|m4v)$/i', '.jpg', $url);
+        }
+
+        return null;
+    }
+}
+
+if (!function_exists('get_project_thumbnail')) {
+    /**
+     * Get thumbnail for a project (custom thumbnail, or auto video thumb, or asset fallback).
+     */
+    function get_project_thumbnail($project): ?string
+    {
+        if (!$project) return null;
+
+        if (!empty($project->thumbnail_path)) {
+            return asset_url($project->thumbnail_path);
+        }
+
+        if (!empty($project->asset_path)) {
+            $videoThumb = get_video_thumbnail($project->asset_path);
+            if ($videoThumb) return $videoThumb;
+        }
+
         return null;
     }
 }

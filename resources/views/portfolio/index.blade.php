@@ -262,7 +262,7 @@
                             $embedUrl  = get_video_embed_url($project->asset_path);
                             $streamUrl = get_google_drive_stream_url($project->asset_path);
                             $driveId   = get_google_drive_id($project->asset_path);
-                            $ytThumb   = get_video_thumbnail($project->asset_path);
+                            $thumbImg  = get_project_thumbnail($project);
                             $isVideo   = $project->type === 'video' || !empty($embedUrl) || !empty($streamUrl) || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov', '.mkv', '.avi']);
                         @endphp
                         @if($videoCount < 6 && $isVideo)
@@ -279,8 +279,8 @@
                                 data-embed-url="{{ $embedUrl }}"
                                 data-url="{{ $project->project_url ?: ($driveId ? 'https://drive.google.com/file/d/' . $driveId . '/view' : $project->asset_path) }}">
                                 <div class="showcase-media-wrapper">
-                                    @if($ytThumb)
-                                        <img src="{{ $ytThumb }}" alt="{{ $project->title }}" class="showcase-img" loading="lazy" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
+                                    @if($thumbImg)
+                                        <img src="{{ $thumbImg }}" alt="{{ $project->title }}" class="showcase-img" loading="lazy" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
                                         <div class="showcase-video-placeholder" style="display:none;">
                                             <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
                                             <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
@@ -321,8 +321,11 @@
     <!-- Web & App Projects Section -->
     <section id="dev-projects" class="showcase-section dev-projects-section">
         <div class="container">
-            <h2 class="section-title text-center">Web & App Projects</h2>
-            <div class="section-divider"></div>
+            <div class="text-center" style="margin-bottom: 20px;">
+                <span class="section-eyebrow"><i class="ri-code-s-slash-line"></i> Web & App Development</span>
+                <h2 class="section-title">Web & App Projects</h2>
+                <div class="section-divider"></div>
+            </div>
 
             <!-- 2-Tab Switcher: Website / Aplikasi -->
             <div class="showcase-tab-switcher">
@@ -334,9 +337,9 @@
                 </button>
             </div>
 
-            <!-- Website Tab (Max 3 Cards) -->
+            <!-- Website Tab -->
             <div class="showcase-tab-panel active" data-panel="website">
-                <div class="showcase-grid">
+                <div class="dev-projects-grid">
                     @php $webCount = 0; @endphp
                     @foreach($projects as $project)
                         @php
@@ -344,12 +347,14 @@
                             $titleLower = strtolower($project->title ?? '');
                             $isWeb      = str_contains($catLower, 'web') || str_contains($catLower, 'site') || str_contains($catLower, 'store') || str_contains($catLower, 'landing') || str_contains($titleLower, 'web') || str_contains($titleLower, 'store') || str_contains($titleLower, 'catering');
                             $embedUrl   = get_video_embed_url($project->asset_path);
-                            $ytThumb    = get_video_thumbnail($project->asset_path);
-                            $isVideo    = $project->type === 'video' || !empty($embedUrl) || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov']);
+                            $streamUrl  = get_google_drive_stream_url($project->asset_path);
+                            $driveId    = get_google_drive_id($project->asset_path);
+                            $thumbImg   = get_project_thumbnail($project);
+                            $isVideo    = $project->type === 'video' || !empty($embedUrl) || !empty($streamUrl) || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov']);
                         @endphp
-                        @if($webCount < 3 && $isWeb)
+                        @if($webCount < 6 && $isWeb)
                             @php $webCount++; @endphp
-                            <div class="showcase-item"
+                            <div class="dev-card showcase-item"
                                 data-id="{{ $project->id }}"
                                 data-title="{{ $project->title }}"
                                 data-desc="{{ $project->description }}"
@@ -357,41 +362,82 @@
                                 data-tags="{{ $project->tags }}"
                                 data-type="{{ $project->type }}"
                                 data-asset="{{ asset_url($project->asset_path) }}"
+                                data-stream-url="{{ $streamUrl }}"
                                 data-embed-url="{{ $embedUrl }}"
                                 data-url="{{ $project->project_url }}">
-                                <div class="showcase-media-wrapper">
-                                    @if($embedUrl)
-                                        @if($ytThumb)
-                                            <img src="{{ $ytThumb }}" alt="{{ $project->title }}" class="showcase-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
-                                            <div class="showcase-video-placeholder" style="display:none;">
-                                                <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
-                                                <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
-                                            </div>
-                                        @else
-                                            <div class="showcase-video-placeholder">
-                                                <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
-                                                <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
-                                            </div>
-                                        @endif
-                                        <div class="video-play-badge"><i class="ri-play-fill"></i></div>
-                                    @elseif($isVideo)
-                                        <video src="{{ asset_url($project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
-                                    @else
-                                        <img src="{{ asset_url($project->asset_path) }}" alt="{{ $project->title }}" class="showcase-img">
-                                    @endif
-                                    <div class="showcase-overlay">
-                                        <div class="showcase-content">
-                                            <span class="showcase-category">{{ $project->category }}</span>
-                                            <h3 class="showcase-title">{{ $project->title }}</h3>
-                                            @if(!empty($project->description))
-                                                <p class="showcase-desc">{{ $project->description }}</p>
-                                            @endif
-                                            <div class="showcase-tags">
-                                                @foreach($project->tags_array as $tag)
-                                                    <span class="mini-tag">{{ $tag }}</span>
-                                                @endforeach
-                                            </div>
+                                
+                                <!-- Mockup Browser Window Header -->
+                                <div class="dev-card-browser-bar">
+                                    <div class="dev-card-dots">
+                                        <span class="dev-dot dot-red"></span>
+                                        <span class="dev-dot dot-yellow"></span>
+                                        <span class="dev-dot dot-green"></span>
+                                    </div>
+                                    <div class="dev-card-url-pill">
+                                        <i class="ri-lock-line"></i>
+                                        <span>{{ !empty($project->project_url) ? (parse_url($project->project_url, PHP_URL_HOST) ?? $project->title) : \Illuminate\Support\Str::slug($project->title) . '.live' }}</span>
+                                    </div>
+                                    <div class="dev-card-action-icon">
+                                        <i class="ri-external-link-line"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Preview Area (16:10 aspect ratio for desktop/web screenshots) -->
+                                <div class="dev-card-preview">
+                                    @if($thumbImg)
+                                        <img src="{{ $thumbImg }}" alt="{{ $project->title }}" class="dev-card-img" loading="lazy">
+                                    @elseif($embedUrl)
+                                        <div class="showcase-video-placeholder">
+                                            <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
+                                            <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
                                         </div>
+                                    @elseif($isVideo)
+                                        <video src="{{ $streamUrl ?: asset_url($project->asset_path) }}" autoplay loop muted playsinline class="dev-card-img"></video>
+                                    @else
+                                        <img src="{{ asset_url($project->asset_path) }}" alt="{{ $project->title }}" class="dev-card-img" loading="lazy">
+                                    @endif
+
+                                    @if($isVideo)
+                                        <div class="video-play-badge"><i class="ri-play-fill"></i></div>
+                                    @endif
+
+                                    <div class="dev-preview-hover-overlay">
+                                        <span class="dev-preview-hint"><i class="ri-zoom-in-line"></i> Detail Desain</span>
+                                    </div>
+                                </div>
+
+                                <!-- Card Body -->
+                                <div class="dev-card-body">
+                                    <div class="dev-card-header">
+                                        <span class="dev-category-badge"><i class="ri-global-line"></i> {{ $project->category }}</span>
+                                        @if(!empty($project->project_url))
+                                            <span class="dev-status-badge"><span class="status-dot"></span> Live</span>
+                                        @endif
+                                    </div>
+
+                                    <h3 class="dev-card-title">{{ $project->title }}</h3>
+
+                                    @if(!empty($project->description))
+                                        <p class="dev-card-desc">{{ $project->description }}</p>
+                                    @endif
+
+                                    @if(!empty($project->tags))
+                                        <div class="dev-card-tags">
+                                            @foreach($project->tags_array as $tag)
+                                                <span class="mini-tag">{{ $tag }}</span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    <div class="dev-card-footer">
+                                        <button type="button" class="btn-dev-detail">
+                                            <i class="ri-information-line"></i> Detail
+                                        </button>
+                                        @if(!empty($project->project_url))
+                                            <a href="{{ $project->project_url }}" target="_blank" rel="noopener noreferrer" class="btn-dev-live" onclick="event.stopPropagation();">
+                                                <span>Kunjungi Website</span> <i class="ri-arrow-right-up-line"></i>
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -403,9 +449,9 @@
                 </div>
             </div>
 
-            <!-- Aplikasi Tab (Max 3 Cards) -->
+            <!-- Aplikasi Tab -->
             <div class="showcase-tab-panel" data-panel="app">
-                <div class="showcase-grid">
+                <div class="dev-projects-grid">
                     @php $appCount = 0; @endphp
                     @foreach($projects as $project)
                         @php
@@ -413,12 +459,14 @@
                             $titleLower = strtolower($project->title ?? '');
                             $isApp      = str_contains($catLower, 'app') || str_contains($catLower, 'mobile') || str_contains($catLower, 'saas') || str_contains($catLower, 'system') || str_contains($titleLower, 'app');
                             $embedUrl   = get_video_embed_url($project->asset_path);
-                            $ytThumb    = get_video_thumbnail($project->asset_path);
-                            $isVideo    = $project->type === 'video' || !empty($embedUrl) || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov']);
+                            $streamUrl  = get_google_drive_stream_url($project->asset_path);
+                            $driveId    = get_google_drive_id($project->asset_path);
+                            $thumbImg   = get_project_thumbnail($project);
+                            $isVideo    = $project->type === 'video' || !empty($embedUrl) || !empty($streamUrl) || \Illuminate\Support\Str::endsWith(strtolower($project->asset_path), ['.mp4', '.webm', '.ogg', '.mov']);
                         @endphp
-                        @if($appCount < 3 && $isApp)
+                        @if($appCount < 6 && $isApp)
                             @php $appCount++; @endphp
-                            <div class="showcase-item"
+                            <div class="dev-card showcase-item"
                                 data-id="{{ $project->id }}"
                                 data-title="{{ $project->title }}"
                                 data-desc="{{ $project->description }}"
@@ -426,41 +474,82 @@
                                 data-tags="{{ $project->tags }}"
                                 data-type="{{ $project->type }}"
                                 data-asset="{{ asset_url($project->asset_path) }}"
+                                data-stream-url="{{ $streamUrl }}"
                                 data-embed-url="{{ $embedUrl }}"
                                 data-url="{{ $project->project_url }}">
-                                <div class="showcase-media-wrapper">
-                                    @if($embedUrl)
-                                        @if($ytThumb)
-                                            <img src="{{ $ytThumb }}" alt="{{ $project->title }}" class="showcase-img" onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';">
-                                            <div class="showcase-video-placeholder" style="display:none;">
-                                                <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
-                                                <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
-                                            </div>
-                                        @else
-                                            <div class="showcase-video-placeholder">
-                                                <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
-                                                <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
-                                            </div>
-                                        @endif
-                                        <div class="video-play-badge"><i class="ri-play-fill"></i></div>
-                                    @elseif($isVideo)
-                                        <video src="{{ asset_url($project->asset_path) }}" autoplay loop muted playsinline class="showcase-img showcase-video"></video>
-                                    @else
-                                        <img src="{{ asset_url($project->asset_path) }}" alt="{{ $project->title }}" class="showcase-img">
-                                    @endif
-                                    <div class="showcase-overlay">
-                                        <div class="showcase-content">
-                                            <span class="showcase-category">{{ $project->category }}</span>
-                                            <h3 class="showcase-title">{{ $project->title }}</h3>
-                                            @if(!empty($project->description))
-                                                <p class="showcase-desc">{{ $project->description }}</p>
-                                            @endif
-                                            <div class="showcase-tags">
-                                                @foreach($project->tags_array as $tag)
-                                                    <span class="mini-tag">{{ $tag }}</span>
-                                                @endforeach
-                                            </div>
+                                
+                                <!-- Mockup Browser/App Window Header -->
+                                <div class="dev-card-browser-bar">
+                                    <div class="dev-card-dots">
+                                        <span class="dev-dot dot-red"></span>
+                                        <span class="dev-dot dot-yellow"></span>
+                                        <span class="dev-dot dot-green"></span>
+                                    </div>
+                                    <div class="dev-card-url-pill">
+                                        <i class="ri-smartphone-line"></i>
+                                        <span>{{ !empty($project->project_url) ? (parse_url($project->project_url, PHP_URL_HOST) ?? $project->title) : \Illuminate\Support\Str::slug($project->title) . '.app' }}</span>
+                                    </div>
+                                    <div class="dev-card-action-icon">
+                                        <i class="ri-external-link-line"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Preview Area -->
+                                <div class="dev-card-preview">
+                                    @if($thumbImg)
+                                        <img src="{{ $thumbImg }}" alt="{{ $project->title }}" class="dev-card-img" loading="lazy">
+                                    @elseif($embedUrl)
+                                        <div class="showcase-video-placeholder">
+                                            <i class="ri-movie-2-line" style="font-size:42px;color:rgba(208,230,253,0.7);margin-bottom:8px;"></i>
+                                            <span style="font-size:13px;font-weight:700;color:#e2e2e2;text-align:center;padding:0 16px;">{{ $project->title }}</span>
                                         </div>
+                                    @elseif($isVideo)
+                                        <video src="{{ $streamUrl ?: asset_url($project->asset_path) }}" autoplay loop muted playsinline class="dev-card-img"></video>
+                                    @else
+                                        <img src="{{ asset_url($project->asset_path) }}" alt="{{ $project->title }}" class="dev-card-img" loading="lazy">
+                                    @endif
+
+                                    @if($isVideo)
+                                        <div class="video-play-badge"><i class="ri-play-fill"></i></div>
+                                    @endif
+
+                                    <div class="dev-preview-hover-overlay">
+                                        <span class="dev-preview-hint"><i class="ri-zoom-in-line"></i> Detail Desain</span>
+                                    </div>
+                                </div>
+
+                                <!-- Card Body -->
+                                <div class="dev-card-body">
+                                    <div class="dev-card-header">
+                                        <span class="dev-category-badge"><i class="ri-smartphone-line"></i> {{ $project->category }}</span>
+                                        @if(!empty($project->project_url))
+                                            <span class="dev-status-badge"><span class="status-dot"></span> Live</span>
+                                        @endif
+                                    </div>
+
+                                    <h3 class="dev-card-title">{{ $project->title }}</h3>
+
+                                    @if(!empty($project->description))
+                                        <p class="dev-card-desc">{{ $project->description }}</p>
+                                    @endif
+
+                                    @if(!empty($project->tags))
+                                        <div class="dev-card-tags">
+                                            @foreach($project->tags_array as $tag)
+                                                <span class="mini-tag">{{ $tag }}</span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    <div class="dev-card-footer">
+                                        <button type="button" class="btn-dev-detail">
+                                            <i class="ri-information-line"></i> Detail
+                                        </button>
+                                        @if(!empty($project->project_url))
+                                            <a href="{{ $project->project_url }}" target="_blank" rel="noopener noreferrer" class="btn-dev-live" onclick="event.stopPropagation();">
+                                                <span>Buka Aplikasi</span> <i class="ri-arrow-right-up-line"></i>
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
